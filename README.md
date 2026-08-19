@@ -17,7 +17,7 @@ O aplicativo roda em segundo plano e mostra notificações nativas no desktop do
 
 ## Status
 
-🚧 Em planejamento. As tarefas iniciais estão nas [issues do projeto](../../issues).
+✅ MVP implementado. Melhorias e relatos de problemas são acompanhados nas [issues do projeto](../../issues).
 
 ## Escopo do MVP
 
@@ -31,20 +31,97 @@ O aplicativo roda em segundo plano e mostra notificações nativas no desktop do
 
 Veja os requisitos detalhados em [docs/REQUISITOS.md](docs/REQUISITOS.md).
 
-## Stack sugerida
+## Recursos
 
-- Python 3.12+
-- PyGObject/GTK 4 para a interface
-- `notify-send`/libnotify para notificações nativas
-- JSON em `~/.config/lembrete-agua/` para configurações
-- `systemd --user` ou arquivo `.desktop` para inicialização automática
-- Pytest, Ruff e GitHub Actions para qualidade
+- Interface GTK 4 em português brasileiro, navegável por teclado.
+- Intervalos em minutos ou horas e quantidade positiva de goles.
+- Controles para iniciar, pausar, retomar e reaplicar a configuração.
+- Notificações nativas por `notify-send`, sem bloquear a interface.
+- Preferências locais em `~/.config/lembrete-agua/config.json`.
+- Inicialização opcional com a sessão por um arquivo `.desktop` do usuário.
+- Operação offline, sem conta, servidor, telemetria ou coleta de dados.
 
-A implementação pode ajustar essas escolhas se houver uma solução mais simples e bem mantida para Ubuntu.
+## Requisitos
+
+O ambiente prioritário é o Ubuntu 24.04 LTS ou mais recente, com Python 3.12+, GTK 4 e libnotify. Em uma instalação do Ubuntu, instale os pacotes necessários:
+
+```bash
+sudo apt update
+sudo apt install python3 python3-venv python3-gi gir1.2-gtk-4.0 libnotify-bin
+```
+
+## Instalação
+
+Clone o repositório, entre na pasta e crie um ambiente virtual que enxergue o PyGObject instalado pelo Ubuntu:
+
+```bash
+git clone https://github.com/gustavomartins-dev/lembrete-agua.git
+cd lembrete-agua
+python3 -m venv --system-site-packages .venv
+source .venv/bin/activate
+python -m pip install --upgrade pip
+python -m pip install -e .
+```
+
+O modo editável é adequado ao projeto open source e cria o comando `lembrete-agua` dentro do ambiente virtual.
+
+## Execução e uso
+
+Com o ambiente ativado, abra o aplicativo:
+
+```bash
+lembrete-agua
+```
+
+Defina o intervalo, a unidade e os goles e selecione **Iniciar**. O primeiro aviso aparece ao fim do intervalo escolhido. **Pausar** suspende o timer e **Retomar** inicia uma nova contagem completa. Se os valores forem alterados durante a execução, selecione **Iniciar** novamente para salvá-los e substituir o timer atual, sem duplicação.
+
+A opção **Iniciar com a sessão** cria `~/.config/autostart/lembrete-agua.desktop`. Ela deve ser ativada enquanto o aplicativo é executado pelo ambiente virtual que continuará instalado no mesmo caminho.
+
+## Desenvolvimento e testes
+
+Instale as ferramentas de desenvolvimento e execute as mesmas verificações da integração contínua:
+
+```bash
+source .venv/bin/activate
+python -m pip install pytest ruff
+ruff check .
+pytest
+```
+
+O código está separado em interface, modelos/validação, configuração, autostart, notificações e agendamento. As integrações com GTK, timers, arquivos e comandos do sistema possuem limites claros para permitir testes sem emitir notificações reais.
+
+## Desinstalação
+
+Na pasta clonada, remova o pacote e o ambiente virtual:
+
+```bash
+source .venv/bin/activate
+python -m pip uninstall lembrete-agua
+deactivate
+rm -rf .venv
+```
+
+Para remover também preferências e inicialização automática:
+
+```bash
+rm -f ~/.config/autostart/lembrete-agua.desktop
+rm -rf ~/.config/lembrete-agua
+```
+
+Os últimos comandos apagam permanentemente apenas os dados locais criados pelo aplicativo.
+
+## Limitações do MVP
+
+- A janela precisa permanecer aberta (pode ficar minimizada) para que os lembretes sejam emitidos.
+- O aplicativo é um lembrete, não registra consumo nem oferece orientação médica.
+- A integração visual depende do serviço de notificações da sessão Linux.
 
 ## Como contribuir
 
 Consulte [CONTRIBUTING.md](CONTRIBUTING.md), escolha uma issue e envie um pull request. Ao contribuir, você concorda que sua contribuição será publicada sob a licença MIT.
+
+<details>
+<summary>Prompt original para implementar o projeto com IA no VS Code</summary>
 
 ## Prompt para usar na IA do VS Code
 
@@ -88,6 +165,8 @@ Critérios de conclusão:
 
 Comece lendo os arquivos e planejando. Em seguida, implemente o MVP completo, tomando decisões razoáveis sem interromper o trabalho por detalhes pequenos.
 ```
+
+</details>
 
 ## Licença
 
