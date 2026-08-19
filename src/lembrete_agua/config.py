@@ -27,9 +27,9 @@ class ConfigStore:
             if not isinstance(autostart, bool):
                 return Preferences()
             return parse_preferences(
-                data.get("interval"),
+                data.get("target_ml"),
+                data.get("duration"),
                 data.get("unit"),
-                data.get("sips"),
                 autostart=autostart,
             )
         except (OSError, json.JSONDecodeError, ValidationError):
@@ -38,9 +38,9 @@ class ConfigStore:
     def save(self, preferences: Preferences) -> None:
         self.path.parent.mkdir(mode=0o700, parents=True, exist_ok=True)
         payload = {
-            "interval": preferences.interval,
+            "target_ml": preferences.target_ml,
+            "duration": preferences.duration,
             "unit": preferences.unit.value,
-            "sips": preferences.sips,
             "autostart": preferences.autostart,
         }
         temporary_path: Path | None = None

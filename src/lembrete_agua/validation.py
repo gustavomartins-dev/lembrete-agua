@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from lembrete_agua.models import IntervalUnit, Preferences
+from lembrete_agua.models import DurationUnit, Preferences
 
 
 class ValidationError(ValueError):
@@ -22,20 +22,19 @@ def positive_integer(value: object, field_name: str) -> int:
 
 
 def parse_preferences(
-    interval: object,
+    target_ml: object,
+    duration: object,
     unit: object,
-    sips: object,
     *,
     autostart: bool = False,
 ) -> Preferences:
     try:
-        parsed_unit = IntervalUnit(str(unit))
+        parsed_unit = DurationUnit(str(unit))
     except ValueError as error:
-        raise ValidationError("Selecione minutos ou horas para o intervalo.") from error
+        raise ValidationError("Selecione minutos ou horas para o prazo.") from error
 
-    return Preferences(
-        interval=positive_integer(interval, "O intervalo"),
-        unit=parsed_unit,
-        sips=positive_integer(sips, "A quantidade de goles"),
-        autostart=bool(autostart),
-    )
+    parsed_ml = positive_integer(target_ml, "A quantidade em mL")
+    parsed_duration = positive_integer(duration, "O prazo")
+    if parsed_ml > 10_000:
+        raise ValidationError("A quantidade deve ser de no máximo 10.000 mL.")
+    return Preferences(parsed_ml, parsed_duration, parsed_unit, bool(autostart))

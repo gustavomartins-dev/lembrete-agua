@@ -1,6 +1,6 @@
 import pytest
 
-from lembrete_agua.models import IntervalUnit
+from lembrete_agua.models import DurationUnit
 from lembrete_agua.validation import ValidationError, parse_preferences, positive_integer
 
 
@@ -11,16 +11,20 @@ def test_positive_integer_rejects_invalid_values(value: object) -> None:
 
 
 def test_parse_preferences_converts_valid_values() -> None:
-    preferences = parse_preferences("2", "horas", "5", autostart=True)
+    preferences = parse_preferences("750", "2", "horas", autostart=True)
 
-    assert preferences.interval == 2
-    assert preferences.unit is IntervalUnit.HOURS
-    assert preferences.sips == 5
+    assert preferences.target_ml == 750
+    assert preferences.duration == 2
+    assert preferences.unit is DurationUnit.HOURS
     assert preferences.autostart is True
-    assert preferences.interval_seconds == 7_200
+    assert preferences.duration_seconds == 7_200
 
 
 def test_parse_preferences_rejects_unknown_unit() -> None:
     with pytest.raises(ValidationError, match="minutos ou horas"):
-        parse_preferences("2", "dias", "5")
+        parse_preferences("500", "2", "dias")
 
+
+def test_parse_preferences_limits_unreasonable_volume() -> None:
+    with pytest.raises(ValidationError, match="10.000"):
+        parse_preferences("10001", "2", "horas")

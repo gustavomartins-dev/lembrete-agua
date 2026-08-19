@@ -71,3 +71,18 @@ def test_invalid_interval_is_rejected() -> None:
     with pytest.raises(ValueError, match="maior que zero"):
         scheduler.start(0, lambda: None)
 
+
+def test_remaining_time_is_preserved_while_paused() -> None:
+    timers = FakeTimers()
+    current_time = [100.0]
+    scheduler = ReminderScheduler(timers.add, timers.remove, lambda: current_time[0])
+    scheduler.start(60, lambda: None)
+
+    current_time[0] = 115.0
+    assert scheduler.remaining_seconds == 45.0
+    scheduler.pause()
+    current_time[0] = 130.0
+    assert scheduler.remaining_seconds == 45.0
+
+    scheduler.resume()
+    assert timers.intervals[-1] == 45_000
