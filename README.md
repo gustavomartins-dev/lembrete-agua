@@ -75,6 +75,8 @@ lembrete-agua
 
 Defina o intervalo, a unidade e os goles e selecione **Iniciar**. O primeiro aviso aparece ao fim do intervalo escolhido. **Pausar** suspende o timer e **Retomar** inicia uma nova contagem completa. Se os valores forem alterados durante a execução, selecione **Iniciar** novamente para salvá-los e substituir o timer atual, sem duplicação.
 
+Ao fechar a janela com os lembretes ativos, ela é ocultada e o aplicativo continua em segundo plano. Execute `lembrete-agua` outra vez para reabrir a mesma instância. Para encerrar o aplicativo, pause os lembretes e feche a janela.
+
 A opção **Iniciar com a sessão** cria `~/.config/autostart/lembrete-agua.desktop`. Ela deve ser ativada enquanto o aplicativo é executado pelo ambiente virtual que continuará instalado no mesmo caminho.
 
 ## Desenvolvimento e testes
@@ -112,7 +114,7 @@ Os últimos comandos apagam permanentemente apenas os dados locais criados pelo 
 
 ## Limitações do MVP
 
-- A janela precisa permanecer aberta (pode ficar minimizada) para que os lembretes sejam emitidos.
+- O MVP não possui ícone na bandeja; reabra a janela executando o comando novamente.
 - O aplicativo é um lembrete, não registra consumo nem oferece orientação médica.
 - A integração visual depende do serviço de notificações da sessão Linux.
 

@@ -23,6 +23,7 @@ class ReminderWindow(Gtk.ApplicationWindow):
         super().__init__(application=application, title="Lembrete de Água")
         self.set_default_size(420, 390)
         self.set_resizable(False)
+        self.connect("close-request", self._on_close_request)
 
         self._store = ConfigStore()
         self._autostart = AutostartManager()
@@ -151,6 +152,12 @@ class ReminderWindow(Gtk.ApplicationWindow):
         elif self._scheduler.state is SchedulerState.PAUSED:
             self._scheduler.resume()
         self._update_state()
+
+    def _on_close_request(self, _window: Gtk.Window) -> bool:
+        if self._scheduler.state is SchedulerState.RUNNING:
+            self.set_visible(False)
+            return True
+        return False
 
     def _on_autostart_changed(self, switch: Gtk.Switch, _parameter: object) -> None:
         if self._building:
