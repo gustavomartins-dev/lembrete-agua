@@ -7,18 +7,19 @@ Ajudar pessoas que usam Ubuntu a criar o hábito de beber água por meio de lemb
 ## Fluxo principal
 
 1. A pessoa abre o aplicativo.
-2. Define uma quantidade em mL e um prazo.
-3. Confere o plano calculado e inicia os lembretes.
-4. O aplicativo permanece ativo sem bloquear a área de trabalho.
-5. Ao fim de cada intervalo, uma notificação nativa é exibida.
-6. Ao clicar no aviso, a pessoa confirma se bebeu ou não.
-7. O dashboard atualiza timer, histórico e desempenho.
-8. A pessoa pode pausar, retomar ou alterar o plano.
+2. Define uma quantidade de goles e um intervalo, ou abre a calculadora opcional.
+3. Na calculadora, informa mL/prazo e escolhe entre três recomendações.
+4. Inicia os lembretes.
+5. O aplicativo permanece ativo sem bloquear a área de trabalho.
+6. Ao fim de cada intervalo, uma notificação nativa é exibida.
+7. Ao clicar no aviso, a pessoa confirma se bebeu ou não.
+8. O dashboard atualiza timer, histórico e desempenho.
+9. A pessoa pode pausar, retomar ou alterar o plano.
 
 ## Requisitos funcionais
 
-- RF01: configurar volume positivo em mililitros e prazo em minutos ou horas.
-- RF02: calcular goles e intervalo usando uma regra explícita e consistente.
+- RF01: configurar manualmente goles e intervalo em minutos ou horas.
+- RF02: oferecer cálculo opcional por volume e prazo em painel inicialmente recolhido.
 - RF03: iniciar, pausar e retomar lembretes.
 - RF04: exibir estado atual e configuração ativa.
 - RF05: emitir notificação nativa clicável com quantidade e pluralização corretas.
@@ -28,6 +29,7 @@ Ajudar pessoas que usam Ubuntu a criar o hábito de beber água por meio de lemb
 - RF09: registrar cada lembrete como pendente, confirmado ou não consumido.
 - RF10: abrir a confirmação correspondente ao clicar na notificação.
 - RF11: exibir timer circular, histórico e desempenho de 7 e 30 dias.
+- RF12: oferecer recomendações Leve, Equilibrada e Intensiva, destacando a Equilibrada.
 
 ## Requisitos não funcionais
 

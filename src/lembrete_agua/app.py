@@ -19,14 +19,17 @@ from lembrete_agua.autostart import (
 from lembrete_agua.config import ConfigStore
 from lembrete_agua.history import HistoryStore, ReminderRecord, ReminderStatus
 from lembrete_agua.models import (
-    DurationUnit,
     HydrationPlan,
+    PlanMode,
+    PlanStrategy,
     Preferences,
+    TimeUnit,
     build_hydration_plan,
+    build_manual_plan,
 )
 from lembrete_agua.notifications import NOTIFICATION_TITLE, reminder_message
 from lembrete_agua.scheduler import ReminderScheduler, SchedulerState
-from lembrete_agua.validation import ValidationError, parse_preferences
+from lembrete_agua.validation import ValidationError, validate_automatic, validate_manual
 
 gi.require_version("Gtk", "4.0")
 from gi.repository import Gio, GLib, Gtk  # noqa: E402
@@ -90,6 +93,8 @@ class ReminderWindow(Gtk.ApplicationWindow):
         self._autostart = AutostartManager()
         self._scheduler = ReminderScheduler(GLib.timeout_add, GLib.source_remove)
         self._preferences = self._store.load()
+        self._plan_mode = self._preferences.plan_mode
+        self._strategy = self._preferences.strategy
         if self._preferences.autostart:
             self._autostart.set_enabled(True)
         self._plan: HydrationPlan | None = None
@@ -101,7 +106,7 @@ class ReminderWindow(Gtk.ApplicationWindow):
         self._build_interface()
         self._fill_preferences(self._preferences)
         self._building = False
-        self._update_plan_preview()
+        self._update_recommendations()
         self._update_dashboard()
         GLib.timeout_add_seconds(1, self._on_clock_tick)
 
@@ -132,10 +137,7 @@ class ReminderWindow(Gtk.ApplicationWindow):
         page.set_margin_top(18)
 
         intro = Gtk.Label(
-            label=(
-                "Informe quanto deseja beber e em quanto tempo. "
-                "O aplicativo calcula os goles e os intervalos."
-            ),
+            label="Escolha quantos goles deseja tomar e de quanto em quanto tempo.",
             xalign=0,
             wrap=True,
         )
@@ -143,37 +145,93 @@ class ReminderWindow(Gtk.ApplicationWindow):
 
         grid = Gtk.Grid(column_spacing=14, row_spacing=14)
         page.append(grid)
+        sips_label = Gtk.Label(label="Goles por lembrete:", xalign=0)
+        self._sips = Gtk.SpinButton.new_with_range(1, 100, 1)
+        self._sips.set_hexpand(True)
+        self._sips.connect("value-changed", self._on_manual_changed)
+        sips_label.set_mnemonic_widget(self._sips)
+        grid.attach(sips_label, 0, 0, 1, 1)
+        grid.attach(self._sips, 1, 0, 1, 1)
+
+        interval_label = Gtk.Label(label="A cada:", xalign=0)
+        self._interval = Gtk.SpinButton.new_with_range(1, 1440, 1)
+        self._interval.set_hexpand(True)
+        self._interval.connect("value-changed", self._on_manual_changed)
+        interval_label.set_mnemonic_widget(self._interval)
+        grid.attach(interval_label, 0, 1, 1, 1)
+        grid.attach(self._interval, 1, 1, 1, 1)
+
+        unit_label = Gtk.Label(label="Unidade:", xalign=0)
+        self._interval_unit = Gtk.DropDown.new_from_strings(["Minutos", "Horas"])
+        self._interval_unit.set_hexpand(True)
+        self._interval_unit.connect("notify::selected", self._on_manual_changed)
+        unit_label.set_mnemonic_widget(self._interval_unit)
+        grid.attach(unit_label, 0, 2, 1, 1)
+        grid.attach(self._interval_unit, 1, 2, 1, 1)
+
+        self._mode_status = Gtk.Label(xalign=0, wrap=True)
+        page.append(self._mode_status)
+
+        expander = Gtk.Expander(label="Cálculo automático (opcional)")
+        calculator = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=12)
+        calculator.set_margin_top(12)
+        calculator.set_margin_start(12)
+        calculator.set_margin_end(12)
+        auto_intro = Gtk.Label(
+            label="Informe a meta e escolha uma das três recomendações calculadas.",
+            xalign=0,
+            wrap=True,
+        )
+        calculator.append(auto_intro)
+        auto_grid = Gtk.Grid(column_spacing=14, row_spacing=10)
+        calculator.append(auto_grid)
         amount_label = Gtk.Label(label="Quantidade (mL):", xalign=0)
         self._target_ml = Gtk.SpinButton.new_with_range(25, 10_000, 25)
-        self._target_ml.set_hexpand(True)
-        self._target_ml.connect("value-changed", self._on_preview_changed)
-        amount_label.set_mnemonic_widget(self._target_ml)
-        grid.attach(amount_label, 0, 0, 1, 1)
-        grid.attach(self._target_ml, 1, 0, 1, 1)
-
+        self._target_ml.connect("value-changed", self._on_auto_changed)
+        auto_grid.attach(amount_label, 0, 0, 1, 1)
+        auto_grid.attach(self._target_ml, 1, 0, 1, 1)
         duration_label = Gtk.Label(label="Prazo:", xalign=0)
         self._duration = Gtk.SpinButton.new_with_range(1, 1440, 1)
-        self._duration.set_hexpand(True)
-        self._duration.connect("value-changed", self._on_preview_changed)
-        duration_label.set_mnemonic_widget(self._duration)
-        grid.attach(duration_label, 0, 1, 1, 1)
-        grid.attach(self._duration, 1, 1, 1, 1)
+        self._duration.connect("value-changed", self._on_auto_changed)
+        auto_grid.attach(duration_label, 0, 1, 1, 1)
+        auto_grid.attach(self._duration, 1, 1, 1, 1)
+        self._duration_unit = Gtk.DropDown.new_from_strings(["Minutos", "Horas"])
+        self._duration_unit.connect("notify::selected", self._on_auto_changed)
+        auto_grid.attach(Gtk.Label(label="Unidade:", xalign=0), 0, 2, 1, 1)
+        auto_grid.attach(self._duration_unit, 1, 2, 1, 1)
 
-        unit_label = Gtk.Label(label="Unidade do prazo:", xalign=0)
-        self._unit = Gtk.DropDown.new_from_strings(["Minutos", "Horas"])
-        self._unit.set_hexpand(True)
-        self._unit.connect("notify::selected", self._on_preview_changed)
-        unit_label.set_mnemonic_widget(self._unit)
-        grid.attach(unit_label, 0, 2, 1, 1)
-        grid.attach(self._unit, 1, 2, 1, 1)
-
-        self._preview = Gtk.Label(xalign=0, wrap=True)
-        self._preview.add_css_class("card")
-        self._preview.set_margin_top(8)
-        self._preview.set_margin_bottom(8)
-        self._preview.set_margin_start(12)
-        self._preview.set_margin_end(12)
-        page.append(self._preview)
+        self._recommendation_labels: dict[PlanStrategy, Gtk.Label] = {}
+        self._recommendation_buttons: dict[PlanStrategy, Gtk.Button] = {}
+        cards = Gtk.Grid(column_spacing=10, column_homogeneous=True)
+        calculator.append(cards)
+        names = {
+            PlanStrategy.LIGHT: "Leve",
+            PlanStrategy.BALANCED: "Equilibrado ★",
+            PlanStrategy.INTENSIVE: "Intensivo",
+        }
+        for column, strategy in enumerate(PlanStrategy):
+            card = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=7)
+            card.add_css_class("card")
+            card.set_margin_top(6)
+            card.set_margin_bottom(6)
+            card.set_margin_start(6)
+            card.set_margin_end(6)
+            title = Gtk.Label()
+            title.set_markup(f"<b>{names[strategy]}</b>")
+            card.append(title)
+            details = Gtk.Label(wrap=True, justify=Gtk.Justification.CENTER)
+            self._recommendation_labels[strategy] = details
+            card.append(details)
+            choose = Gtk.Button(label="Escolher")
+            if strategy is PlanStrategy.BALANCED:
+                choose.add_css_class("suggested-action")
+                choose.set_tooltip_text("Recomendação principal")
+            choose.connect("clicked", self._on_choose_strategy, strategy)
+            self._recommendation_buttons[strategy] = choose
+            card.append(choose)
+            cards.attach(card, column, 0, 1, 1)
+        expander.set_child(calculator)
+        page.append(expander)
 
         autostart_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=12)
         autostart_label = Gtk.Label(label="Iniciar com a sessão", xalign=0, hexpand=True)
@@ -259,9 +317,14 @@ class ReminderWindow(Gtk.ApplicationWindow):
         return page
 
     def _fill_preferences(self, preferences: Preferences) -> None:
+        self._sips.set_value(preferences.sips)
+        self._interval.set_value(preferences.interval)
+        self._interval_unit.set_selected(0 if preferences.unit is TimeUnit.MINUTES else 1)
         self._target_ml.set_value(preferences.target_ml)
         self._duration.set_value(preferences.duration)
-        self._unit.set_selected(0 if preferences.unit is DurationUnit.MINUTES else 1)
+        self._duration_unit.set_selected(
+            0 if preferences.duration_unit is TimeUnit.MINUTES else 1
+        )
         enabled = self._autostart.is_enabled()
         self._autostart_switch.set_active(enabled)
         if enabled != preferences.autostart:
@@ -269,36 +332,81 @@ class ReminderWindow(Gtk.ApplicationWindow):
             self._store.save(self._preferences)
 
     def _read_preferences(self) -> Preferences:
-        unit = DurationUnit.MINUTES if self._unit.get_selected() == 0 else DurationUnit.HOURS
-        return parse_preferences(
-            self._target_ml.get_text(),
-            self._duration.get_text(),
-            unit.value,
+        interval_unit = (
+            TimeUnit.MINUTES if self._interval_unit.get_selected() == 0 else TimeUnit.HOURS
+        )
+        duration_unit = (
+            TimeUnit.MINUTES if self._duration_unit.get_selected() == 0 else TimeUnit.HOURS
+        )
+        sips, interval, interval_unit = validate_manual(
+            self._sips.get_text(), self._interval.get_text(), interval_unit.value
+        )
+        target_ml, duration, duration_unit = validate_automatic(
+            self._target_ml.get_text(), self._duration.get_text(), duration_unit.value
+        )
+        return Preferences(
+            sips=sips,
+            interval=interval,
+            unit=interval_unit,
+            target_ml=target_ml,
+            duration=duration,
+            duration_unit=duration_unit,
+            plan_mode=self._plan_mode,
+            strategy=self._strategy,
             autostart=self._autostart_switch.get_active(),
         )
 
-    def _on_preview_changed(self, *_args: object) -> None:
+    def _on_manual_changed(self, *_args: object) -> None:
         if not self._building:
-            self._update_plan_preview()
+            self._plan_mode = PlanMode.MANUAL
+            self._update_mode_status()
 
-    def _update_plan_preview(self) -> None:
+    def _on_auto_changed(self, *_args: object) -> None:
+        if not self._building:
+            self._update_recommendations()
+
+    def _on_choose_strategy(self, _button: Gtk.Button, strategy: PlanStrategy) -> None:
+        self._strategy = strategy
+        self._plan_mode = PlanMode.AUTOMATIC
+        self._update_recommendations()
+
+    def _update_mode_status(self) -> None:
+        if self._plan_mode is PlanMode.MANUAL:
+            self._mode_status.set_markup("<b>Modo selecionado:</b> manual")
+        else:
+            self._mode_status.set_markup(
+                f"<b>Modo selecionado:</b> automático · {self._strategy.value}"
+            )
+
+    def _update_recommendations(self) -> None:
         try:
-            plan = build_hydration_plan(self._read_preferences())
+            preferences = self._read_preferences()
         except ValidationError as error:
-            self._preview.set_text(str(error))
+            for label in self._recommendation_labels.values():
+                label.set_text(str(error))
             return
-        interval = format_duration(plan.interval_seconds)
-        self._preview.set_markup(
-            f"<b>Plano recomendado</b>\n{plan.total_sips} goles estimados em "
-            f"{plan.reminder_count} lembretes, a cada {interval}.\n"
-            "Estimativa usada: 25 mL por gole, até 5 goles por lembrete."
-        )
+        for strategy in PlanStrategy:
+            plan = build_hydration_plan(preferences, strategy)
+            self._recommendation_labels[strategy].set_text(
+                f"Até {strategy.max_sips} goles\n"
+                f"{plan.reminder_count} avisos\n"
+                f"A cada {format_duration(plan.interval_seconds)}"
+            )
+            selected = self._plan_mode is PlanMode.AUTOMATIC and self._strategy is strategy
+            self._recommendation_buttons[strategy].set_label(
+                "Selecionado" if selected else "Escolher"
+            )
+        self._update_mode_status()
 
     def _on_start(self, _button: Gtk.Button) -> None:
         try:
             self._preferences = self._read_preferences()
             self._store.save(self._preferences)
-            self._plan = build_hydration_plan(self._preferences)
+            self._plan = (
+                build_manual_plan(self._preferences)
+                if self._preferences.plan_mode is PlanMode.MANUAL
+                else build_hydration_plan(self._preferences)
+            )
             self._session_id = str(uuid.uuid4())
             self._reminder_number = 0
             self._scheduler.start(self._plan.interval_seconds, self._create_reminder)
@@ -324,7 +432,10 @@ class ReminderWindow(Gtk.ApplicationWindow):
             self._show_error(f"Não foi possível registrar o lembrete: {error}")
             return
         self._application.send_reminder_notification(record)
-        if self._reminder_number >= self._plan.reminder_count:
+        if (
+            self._plan.reminder_count is not None
+            and self._reminder_number >= self._plan.reminder_count
+        ):
             self._scheduler.stop()
         self._update_state()
         self._update_dashboard()
@@ -448,10 +559,14 @@ class ReminderWindow(Gtk.ApplicationWindow):
             self._pause_button.set_sensitive(False)
             self._pause_button.set_label("Pausar")
             return
-        self._status.set_text(
-            f"Estado: {state.value.lower()} · lembrete {self._reminder_number + 1} "
-            f"de {self._plan.reminder_count if self._plan else 0}."
-        )
+        if self._plan is not None and self._plan.is_repeating:
+            progress = f"próximo lembrete: {self._reminder_number + 1} · modo contínuo"
+        else:
+            progress = (
+                f"lembrete {self._reminder_number + 1} "
+                f"de {self._plan.reminder_count if self._plan else 0}"
+            )
+        self._status.set_text(f"Estado: {state.value.lower()} · {progress}.")
         self._pause_button.set_sensitive(True)
         self._pause_button.set_label("Retomar" if state is SchedulerState.PAUSED else "Pausar")
 

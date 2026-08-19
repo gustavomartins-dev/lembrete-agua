@@ -6,14 +6,14 @@ Aplicativo pessoal e open source para Ubuntu/Linux que cria um plano local de hi
 
 ## Ideia
 
-O usuário escolhe:
+No modo principal, o usuário escolhe:
 
-- quantos mililitros deseja beber;
-- em quanto tempo deseja cumprir essa meta;
+- quantos goles deseja tomar por lembrete;
+- o intervalo entre os lembretes;
 - se o aplicativo deve iniciar junto com a sessão;
 - se deseja pausar ou retomar as notificações.
 
-O aplicativo estima 25 mL por gole, limita cada lembrete a 5 goles e distribui automaticamente os lembretes pelo prazo. O histórico registra se a pessoa confirmou ou não cada ocorrência.
+Opcionalmente, um painel recolhido calcula três planos a partir de uma meta em mL e um prazo. O histórico registra se a pessoa confirmou ou não cada ocorrência.
 
 ## Status
 
@@ -21,7 +21,9 @@ O aplicativo estima 25 mL por gole, limita cada lembrete a 5 goles e distribui a
 
 ## Recursos
 
-- Plano automático a partir de volume em mL e prazo em minutos ou horas.
+- Plano manual contínuo com goles e intervalo definidos livremente.
+- Calculadora opcional recolhida com recomendações Leve, Equilibrada e Intensiva.
+- Recomendação Equilibrada destacada como escolha principal.
 - Notificações clicáveis que abrem diretamente a confirmação do lembrete.
 - Respostas “bebi” e “não bebi”, com ocorrências pendentes recuperáveis.
 - Dashboard com timer circular, histórico recente e desempenho de 7 e 30 dias.
@@ -66,7 +68,15 @@ Com o ambiente ativado, abra o aplicativo:
 lembrete-agua
 ```
 
-Na aba **Plano**, defina o volume e o prazo. A recomendação calculada aparece antes do início. Selecione **Iniciar plano** para abrir o dashboard e iniciar o timer. **Pausar** preserva o tempo restante e **Retomar** continua a contagem.
+Na aba **Plano**, defina diretamente quantos goles deseja tomar e de quanto em quanto tempo. Selecione **Iniciar plano** para abrir o dashboard e iniciar um plano contínuo. **Pausar** preserva o tempo restante e **Retomar** continua a contagem.
+
+Para receber ajuda no cálculo, abra **Cálculo automático (opcional)**, informe os mL e o prazo e escolha uma opção:
+
+- **Leve:** até 3 goles por aviso, com lembretes mais frequentes.
+- **Equilibrado ★:** até 5 goles por aviso; é a recomendação principal.
+- **Intensivo:** até 8 goles por aviso, com lembretes menos frequentes.
+
+Cada opção mostra previamente o número de avisos e o intervalo calculado. Editar novamente qualquer campo manual muda a seleção de volta para o modo manual.
 
 Ao receber um aviso, clique na notificação ou em **Confirmar agora** para abrir a aba **Confirmação**. Responda **Sim, eu bebi** ou **Não bebi**. A resposta aparece imediatamente no histórico e atualiza o desempenho semanal e mensal. Lembretes ainda não respondidos ficam disponíveis no dashboard.
 
