@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import math
 import sys
+import time
 import uuid
 from dataclasses import replace
 from datetime import datetime
@@ -18,6 +19,7 @@ from lembrete_agua.autostart import (
     create_autostart_manager,
 )
 from lembrete_agua.config import ConfigStore
+from lembrete_agua.database import ActiveSession, ActiveSessionStore
 from lembrete_agua.history import HistoryStore, ReminderRecord, ReminderStatus
 from lembrete_agua.models import (
     HydrationPlan,
@@ -36,6 +38,11 @@ from lembrete_agua.notifications import (
 from lembrete_agua.scheduler import ReminderScheduler, SchedulerState
 from lembrete_agua.validation import ValidationError, validate_automatic, validate_manual
 
+try:
+    gi.require_foreign("cairo")
+    CAIRO_INTEGRATION_AVAILABLE = True
+except ImportError:
+    CAIRO_INTEGRATION_AVAILABLE = False
 gi.require_version("Gtk", "4.0")
 from gi.repository import Gio, GLib, Gtk  # noqa: E402
 
@@ -51,9 +58,15 @@ class TimerRing(Gtk.Overlay):
     def __init__(self) -> None:
         super().__init__()
         self._fraction = 0.0
-        self._drawing = Gtk.DrawingArea(width_request=190, height_request=190)
-        self._drawing.set_draw_func(self._draw)
-        self.set_child(self._drawing)
+        self._drawing: Gtk.DrawingArea | None = None
+        self._progress: Gtk.ProgressBar | None = None
+        if CAIRO_INTEGRATION_AVAILABLE:
+            self._drawing = Gtk.DrawingArea(width_request=190, height_request=190)
+            self._drawing.set_draw_func(self._draw)
+            self.set_child(self._drawing)
+        else:
+            self._progress = Gtk.ProgressBar(width_request=250, valign=Gtk.Align.CENTER)
+            self.set_child(self._progress)
         self._label = Gtk.Label()
         self._label.set_markup("<span size='xx-large' weight='bold'>--:--</span>")
         self.add_overlay(self._label)
@@ -66,7 +79,10 @@ class TimerRing(Gtk.Overlay):
             self._fraction = min(1.0, max(0.0, remaining / total))
             text = format_duration(remaining)
         self._label.set_markup(f"<span size='xx-large' weight='bold'>{text}</span>")
-        self._drawing.queue_draw()
+        if self._drawing is not None:
+            self._drawing.queue_draw()
+        elif self._progress is not None:
+            self._progress.set_fraction(self._fraction)
 
     def _draw(
         self,
@@ -101,6 +117,7 @@ class ReminderWindow(Gtk.ApplicationWindow):
         self._application = application
         self._store = ConfigStore()
         self._history = HistoryStore()
+        self._session_store = ActiveSessionStore(self._store.database)
         self._autostart = create_autostart_manager()
         self._scheduler = ReminderScheduler(GLib.timeout_add, GLib.source_remove)
         self._preferences = self._store.load()
@@ -118,6 +135,7 @@ class ReminderWindow(Gtk.ApplicationWindow):
         self._fill_preferences(self._preferences)
         self._building = False
         self._update_recommendations()
+        self._restore_active_session()
         self._update_dashboard()
         self._update_state()
         GLib.timeout_add_seconds(1, self._on_clock_tick)
@@ -284,6 +302,19 @@ class ReminderWindow(Gtk.ApplicationWindow):
         timer_actions.append(self._dashboard_pause_button)
         timer_actions.append(self._reset_timer_button)
         page.append(timer_actions)
+        interval_actions = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=8)
+        interval_actions.set_halign(Gtk.Align.CENTER)
+        interval_actions.append(Gtk.Label(label="Alterar contagem para:"))
+        self._active_interval = Gtk.SpinButton.new_with_range(1, 1440, 1)
+        self._active_interval.set_value(30)
+        self._active_interval_unit = Gtk.DropDown.new_from_strings(["Minutos", "Horas"])
+        apply_interval = Gtk.Button(label="Aplicar")
+        apply_interval.connect("clicked", self._on_apply_active_interval)
+        interval_actions.append(self._active_interval)
+        interval_actions.append(self._active_interval_unit)
+        interval_actions.append(apply_interval)
+        self._apply_interval_button = apply_interval
+        page.append(interval_actions)
 
         metrics = Gtk.Grid(column_spacing=12, row_spacing=8, column_homogeneous=True)
         self._week_metric = Gtk.Label()
@@ -431,10 +462,12 @@ class ReminderWindow(Gtk.ApplicationWindow):
             self._session_id = str(uuid.uuid4())
             self._reminder_number = 0
             self._scheduler.start(self._plan.interval_seconds, self._create_reminder)
+            self._set_active_interval_controls(self._plan.interval_seconds)
         except (ValidationError, OSError) as error:
             self._show_error(str(error))
             return
         self._update_state()
+        self._persist_active_session()
         self._stack.set_visible_child_name("dashboard")
         self._update_dashboard()
 
@@ -458,6 +491,9 @@ class ReminderWindow(Gtk.ApplicationWindow):
             and self._reminder_number >= self._plan.reminder_count
         ):
             self._scheduler.stop()
+            self._session_store.clear()
+        else:
+            self._persist_active_session()
         self._update_state()
         self._update_dashboard()
 
@@ -504,10 +540,102 @@ class ReminderWindow(Gtk.ApplicationWindow):
             self._scheduler.resume()
         self._update_state()
         self._update_dashboard()
+        self._persist_active_session()
 
     def _on_reset_countdown(self, _button: Gtk.Button) -> None:
         if self._scheduler.reset_countdown():
             self._update_timer()
+            self._persist_active_session()
+
+    def _on_apply_active_interval(self, _button: Gtk.Button) -> None:
+        if self._plan is None:
+            return
+        multiplier = 60 if self._active_interval_unit.get_selected() == 0 else 3_600
+        interval_seconds = self._active_interval.get_value_as_int() * multiplier
+        try:
+            self._scheduler.update_interval(interval_seconds)
+        except (ValueError, RuntimeError) as error:
+            self._show_error(str(error))
+            return
+        self._plan = replace(self._plan, interval_seconds=float(interval_seconds))
+        if self._preferences.plan_mode is PlanMode.MANUAL:
+            unit = TimeUnit.MINUTES if multiplier == 60 else TimeUnit.HOURS
+            self._preferences = replace(
+                self._preferences,
+                interval=self._active_interval.get_value_as_int(),
+                unit=unit,
+            )
+            self._store.save(self._preferences)
+            self._building = True
+            self._interval.set_value(self._preferences.interval)
+            self._interval_unit.set_selected(0 if unit is TimeUnit.MINUTES else 1)
+            self._building = False
+        self._persist_active_session()
+        self._update_timer()
+
+    def _restore_active_session(self) -> None:
+        saved = self._session_store.load()
+        if saved is None:
+            return
+        self._plan = (
+            build_manual_plan(self._preferences)
+            if self._preferences.plan_mode is PlanMode.MANUAL
+            else build_hydration_plan(self._preferences)
+        )
+        self._plan = replace(self._plan, interval_seconds=saved.interval_seconds)
+        self._session_id = saved.session_id
+        self._reminder_number = saved.reminder_number
+        if self._plan.reminder_count is not None and (
+            self._reminder_number >= self._plan.reminder_count
+        ):
+            self._session_store.clear()
+            self._plan = None
+            return
+        if saved.state == SchedulerState.PAUSED.value:
+            delay = saved.paused_remaining or saved.interval_seconds
+            self._scheduler.start(
+                saved.interval_seconds,
+                self._create_reminder,
+                initial_delay=delay,
+            )
+            self._scheduler.pause()
+        else:
+            delay = max(0.1, (saved.deadline or time.time()) - time.time())
+            self._scheduler.start(
+                saved.interval_seconds,
+                self._create_reminder,
+                initial_delay=delay,
+            )
+        self._set_active_interval_controls(saved.interval_seconds)
+
+    def _set_active_interval_controls(self, interval_seconds: float) -> None:
+        use_hours = interval_seconds >= 3_600 and interval_seconds % 3_600 == 0
+        divisor = 3_600 if use_hours else 60
+        self._active_interval.set_value(max(1, round(interval_seconds / divisor)))
+        self._active_interval_unit.set_selected(1 if use_hours else 0)
+
+    def _persist_active_session(self) -> None:
+        if (
+            self._plan is None
+            or self._session_id is None
+            or self._scheduler.state is SchedulerState.STOPPED
+        ):
+            return
+        remaining = self._scheduler.remaining_seconds
+        self._session_store.save(
+            ActiveSession(
+                session_id=self._session_id,
+                reminder_number=self._reminder_number,
+                interval_seconds=self._plan.interval_seconds,
+                deadline=time.time() + remaining
+                if remaining is not None and self._scheduler.state is SchedulerState.RUNNING
+                else None,
+                paused_remaining=remaining
+                if self._scheduler.state is SchedulerState.PAUSED
+                else None,
+                state=self._scheduler.state.value,
+            )
+        )
 
     def _on_autostart_changed(self, switch: Gtk.Switch, _parameter: object) -> None:
         if self._building:
@@ -593,6 +721,7 @@ class ReminderWindow(Gtk.ApplicationWindow):
             self._dashboard_pause_button.set_sensitive(False)
             self._dashboard_pause_button.set_label("Pausar")
             self._reset_timer_button.set_sensitive(False)
+            self._apply_interval_button.set_sensitive(False)
             return
         if self._plan is not None and self._plan.is_repeating:
             progress = f"próximo lembrete: {self._reminder_number + 1} · modo contínuo"
@@ -609,6 +738,7 @@ class ReminderWindow(Gtk.ApplicationWindow):
             "Retomar" if state is SchedulerState.PAUSED else "Pausar"
         )
         self._reset_timer_button.set_sensitive(True)
+        self._apply_interval_button.set_sensitive(True)
 
     def _on_close_request(self, _window: Gtk.Window) -> bool:
         if self._scheduler.state is SchedulerState.RUNNING:

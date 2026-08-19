@@ -30,6 +30,8 @@ Ajudar pessoas que usam Ubuntu a criar o hábito de beber água por meio de lemb
 - RF10: abrir a confirmação correspondente ao clicar na notificação.
 - RF11: exibir timer circular, histórico e desempenho de 7 e 30 dias.
 - RF12: oferecer recomendações Leve, Equilibrada e Intensiva, destacando a Equilibrada.
+- RF13: permitir alterar e reiniciar o intervalo de uma contagem ativa.
+- RF14: persistir preferências, histórico e sessão ativa em SQLite e restaurar o prazo após reinício.
 
 ## Requisitos não funcionais
 

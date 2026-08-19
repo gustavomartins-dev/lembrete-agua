@@ -118,3 +118,23 @@ def test_reset_does_nothing_when_stopped() -> None:
     scheduler = ReminderScheduler(timers.add, timers.remove)
 
     assert not scheduler.reset_countdown()
+
+
+def test_start_can_restore_a_shorter_initial_delay() -> None:
+    timers = FakeTimers()
+    scheduler = ReminderScheduler(timers.add, timers.remove)
+
+    scheduler.start(60, lambda: None, initial_delay=12)
+
+    assert timers.intervals == [12_000]
+
+
+def test_update_interval_applies_and_resets_countdown() -> None:
+    timers = FakeTimers()
+    scheduler = ReminderScheduler(timers.add, timers.remove)
+    scheduler.start(60, lambda: None)
+
+    scheduler.update_interval(90)
+
+    assert timers.intervals == [60_000, 90_000]
+    assert timers.removed == [1]
