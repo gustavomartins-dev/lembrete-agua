@@ -37,7 +37,7 @@ Ajudar pessoas que usam Ubuntu a criar o hábito de beber água por meio de lemb
 - Operação totalmente local e offline.
 - Nenhuma telemetria ou coleta de dados.
 - Baixo consumo de recursos.
-- Compatibilidade prioritária com versões Ubuntu LTS ainda suportadas.
+- Compatibilidade com Ubuntu LTS suportado e Windows 10/11 via MSYS2 UCRT64.
 - Interface responsiva e navegável por teclado.
 - Código testável e documentado.
 

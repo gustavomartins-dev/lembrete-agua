@@ -1,6 +1,6 @@
 # Lembrete de Água 💧
 
-Aplicativo pessoal e open source para Ubuntu/Linux que cria um plano local de hidratação, envia lembretes confirmáveis e acompanha o histórico.
+Aplicativo pessoal e open source para Ubuntu/Linux e Windows que cria um plano local de hidratação, envia lembretes confirmáveis e acompanha o histórico.
 
 > Projeto independente de Gustavo Martins. Não possui vínculo com a Chinalink nem com qualquer empresa.
 
@@ -29,14 +29,15 @@ Opcionalmente, um painel recolhido calcula três planos a partir de uma meta em 
 - Dashboard com timer circular, histórico recente e desempenho de 7 e 30 dias.
 - Ícone próprio no menu, na janela e nas notificações.
 - Controles para iniciar, pausar, retomar e substituir o plano.
-- Preferências locais em `~/.config/lembrete-agua/config.json`.
-- Histórico local em `~/.config/lembrete-agua/history.json`.
+- Preferências e histórico locais na pasta de configuração do sistema.
 - Inicialização opcional com a sessão por um arquivo `.desktop` do usuário.
 - Operação offline, sem conta, servidor, telemetria ou coleta de dados.
 
 Veja os requisitos detalhados em [docs/REQUISITOS.md](docs/REQUISITOS.md).
 
-## Requisitos
+## Ubuntu/Linux
+
+### Requisitos
 
 O ambiente prioritário é o Ubuntu 24.04 LTS ou mais recente, com Python 3.12+, GTK 4 e libnotify. Em uma instalação do Ubuntu, instale os pacotes necessários:
 
@@ -45,7 +46,7 @@ sudo apt update
 sudo apt install python3 python3-venv python3-gi gir1.2-gtk-4.0 libnotify-bin
 ```
 
-## Instalação
+### Instalação
 
 Clone o repositório, entre na pasta e crie um ambiente virtual que enxergue o PyGObject instalado pelo Ubuntu:
 
@@ -60,13 +61,40 @@ python -m pip install -e .
 
 O modo editável é adequado ao projeto open source e cria o comando `lembrete-agua` dentro do ambiente virtual.
 
-## Execução e uso
+### Execução
 
 Com o ambiente ativado, abra o aplicativo:
 
 ```bash
 lembrete-agua
 ```
+
+## Windows 10/11
+
+O GTK 4 com PyGObject é suportado no Windows por meio do ambiente MSYS2 UCRT64. Instale o [MSYS2](https://www.msys2.org/), abra o terminal **MSYS2 UCRT64** e execute:
+
+```bash
+pacman -Syu
+pacman -S --needed git mingw-w64-ucrt-x86_64-gtk4 \
+  mingw-w64-ucrt-x86_64-python \
+  mingw-w64-ucrt-x86_64-python-gobject \
+  mingw-w64-ucrt-x86_64-python-pip
+```
+
+Feche e abra novamente o terminal UCRT64 se a atualização solicitar. Depois instale o projeto:
+
+```bash
+git clone https://github.com/gustavomartins-dev/lembrete-agua.git
+cd lembrete-agua
+python -m pip install --user -e .
+python -m lembrete_agua
+```
+
+A dependência `windows-toasts` é instalada automaticamente apenas no Windows. As preferências e o histórico ficam em `%APPDATA%\Lembrete de Agua`. O interruptor **Iniciar com a sessão** usa a chave `HKCU\Software\Microsoft\Windows\CurrentVersion\Run`, sem exigir privilégios de administrador.
+
+As notificações usam os toasts do Windows. Enquanto o aplicativo estiver executando o plano, clicar no toast traz a janela para frente e abre a confirmação correspondente.
+
+## Uso
 
 Na aba **Plano**, defina diretamente quantos goles deseja tomar e de quanto em quanto tempo. Selecione **Iniciar plano** para abrir o dashboard e iniciar um plano contínuo. **Pausar** preserva o tempo restante e **Retomar** continua a contagem.
 
@@ -120,12 +148,22 @@ rm -rf ~/.config/lembrete-agua
 
 Os últimos comandos apagam permanentemente apenas os dados locais criados pelo aplicativo.
 
+No Windows, execute no terminal UCRT64:
+
+```bash
+python -m pip uninstall lembrete-agua windows-toasts
+rm -rf "$APPDATA/Lembrete de Agua"
+reg delete 'HKCU\Software\Microsoft\Windows\CurrentVersion\Run' \
+  /v 'Lembrete de Água' /f
+```
+
 ## Limitações do MVP
 
 - O MVP não possui ícone na bandeja; reabra a janela executando o comando novamente.
 - A estimativa de 25 mL por gole é operacional, não uma medição exata.
 - O aplicativo registra confirmações, mas não oferece orientação médica.
 - A integração visual depende do serviço de notificações da sessão Linux.
+- A integração Windows foi coberta por testes automatizados, mas precisa de validação visual final em uma máquina Windows 10/11.
 
 ## Como contribuir
 
