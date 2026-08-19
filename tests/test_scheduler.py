@@ -86,3 +86,35 @@ def test_remaining_time_is_preserved_while_paused() -> None:
 
     scheduler.resume()
     assert timers.intervals[-1] == 45_000
+
+
+def test_reset_restarts_running_countdown_without_duplicate_timer() -> None:
+    timers = FakeTimers()
+    current_time = [100.0]
+    scheduler = ReminderScheduler(timers.add, timers.remove, lambda: current_time[0])
+    scheduler.start(60, lambda: None)
+    current_time[0] = 130.0
+
+    assert scheduler.reset_countdown()
+
+    assert timers.removed == [1]
+    assert list(timers.callbacks) == [2]
+    assert scheduler.remaining_seconds == 60.0
+
+
+def test_reset_paused_countdown_keeps_it_paused_at_full_interval() -> None:
+    timers = FakeTimers()
+    scheduler = ReminderScheduler(timers.add, timers.remove)
+    scheduler.start(60, lambda: None)
+    scheduler.pause()
+
+    assert scheduler.reset_countdown()
+    assert scheduler.state is SchedulerState.PAUSED
+    assert scheduler.remaining_seconds == 60
+
+
+def test_reset_does_nothing_when_stopped() -> None:
+    timers = FakeTimers()
+    scheduler = ReminderScheduler(timers.add, timers.remove)
+
+    assert not scheduler.reset_countdown()

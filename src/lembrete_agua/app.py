@@ -6,6 +6,7 @@ import uuid
 from dataclasses import replace
 from datetime import datetime
 
+import cairo
 import gi
 
 from lembrete_agua.analytics import period_stats
@@ -67,7 +68,13 @@ class TimerRing(Gtk.Overlay):
         self._label.set_markup(f"<span size='xx-large' weight='bold'>{text}</span>")
         self._drawing.queue_draw()
 
-    def _draw(self, _area: Gtk.DrawingArea, context: object, width: int, height: int) -> None:
+    def _draw(
+        self,
+        _area: Gtk.DrawingArea,
+        context: cairo.Context,
+        width: int,
+        height: int,
+    ) -> None:
         radius = min(width, height) / 2 - 12
         center_x, center_y = width / 2, height / 2
         context.set_line_width(12)
@@ -112,6 +119,7 @@ class ReminderWindow(Gtk.ApplicationWindow):
         self._building = False
         self._update_recommendations()
         self._update_dashboard()
+        self._update_state()
         GLib.timeout_add_seconds(1, self._on_clock_tick)
 
     def _build_interface(self) -> None:
@@ -267,6 +275,15 @@ class ReminderWindow(Gtk.ApplicationWindow):
         page.append(self._timer_ring)
         self._next_label = Gtk.Label(label="Nenhum plano ativo", wrap=True)
         page.append(self._next_label)
+        timer_actions = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=10)
+        timer_actions.set_halign(Gtk.Align.CENTER)
+        self._dashboard_pause_button = Gtk.Button(label="Pausar")
+        self._dashboard_pause_button.connect("clicked", self._on_pause_resume)
+        self._reset_timer_button = Gtk.Button(label="Reiniciar contagem")
+        self._reset_timer_button.connect("clicked", self._on_reset_countdown)
+        timer_actions.append(self._dashboard_pause_button)
+        timer_actions.append(self._reset_timer_button)
+        page.append(timer_actions)
 
         metrics = Gtk.Grid(column_spacing=12, row_spacing=8, column_homogeneous=True)
         self._week_metric = Gtk.Label()
@@ -488,6 +505,10 @@ class ReminderWindow(Gtk.ApplicationWindow):
         self._update_state()
         self._update_dashboard()
 
+    def _on_reset_countdown(self, _button: Gtk.Button) -> None:
+        if self._scheduler.reset_countdown():
+            self._update_timer()
+
     def _on_autostart_changed(self, switch: Gtk.Switch, _parameter: object) -> None:
         if self._building:
             return
@@ -510,10 +531,17 @@ class ReminderWindow(Gtk.ApplicationWindow):
         total = self._plan.interval_seconds if self._plan else None
         remaining = self._scheduler.remaining_seconds
         self._timer_ring.update(remaining, total)
-        if remaining is not None:
-            self._next_label.set_text(f"Próximo lembrete em {format_duration(remaining)}")
-        elif self._scheduler.state is SchedulerState.PAUSED:
-            self._next_label.set_text("Plano pausado")
+        if self._scheduler.state is SchedulerState.PAUSED and remaining is not None:
+            self._next_label.set_text(
+                f"Pausado · contagem reinicia em {format_duration(remaining)} ao retomar"
+            )
+        elif remaining is not None:
+            next_number = self._reminder_number + 1
+            sips = self._plan.sips_for_reminder(next_number) if self._plan else 0
+            noun = "gole" if sips == 1 else "goles"
+            self._next_label.set_text(
+                f"Próximos {sips} {noun} em {format_duration(remaining)}"
+            )
         else:
             self._next_label.set_text("Nenhum lembrete agendado")
 
@@ -562,6 +590,9 @@ class ReminderWindow(Gtk.ApplicationWindow):
             self._status.set_text("Estado: plano concluído ou parado.")
             self._pause_button.set_sensitive(False)
             self._pause_button.set_label("Pausar")
+            self._dashboard_pause_button.set_sensitive(False)
+            self._dashboard_pause_button.set_label("Pausar")
+            self._reset_timer_button.set_sensitive(False)
             return
         if self._plan is not None and self._plan.is_repeating:
             progress = f"próximo lembrete: {self._reminder_number + 1} · modo contínuo"
@@ -573,6 +604,11 @@ class ReminderWindow(Gtk.ApplicationWindow):
         self._status.set_text(f"Estado: {state.value.lower()} · {progress}.")
         self._pause_button.set_sensitive(True)
         self._pause_button.set_label("Retomar" if state is SchedulerState.PAUSED else "Pausar")
+        self._dashboard_pause_button.set_sensitive(True)
+        self._dashboard_pause_button.set_label(
+            "Retomar" if state is SchedulerState.PAUSED else "Pausar"
+        )
+        self._reset_timer_button.set_sensitive(True)
 
     def _on_close_request(self, _window: Gtk.Window) -> bool:
         if self._scheduler.state is SchedulerState.RUNNING:

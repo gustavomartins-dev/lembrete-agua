@@ -65,6 +65,17 @@ class ReminderScheduler:
         self._paused_remaining = None
         self.state = SchedulerState.RUNNING
 
+    def reset_countdown(self) -> bool:
+        """Volta o próximo disparo ao intervalo completo, preservando o estado."""
+        if self.state is SchedulerState.STOPPED or self._interval_seconds is None:
+            return False
+        if self.state is SchedulerState.PAUSED:
+            self._paused_remaining = self._interval_seconds
+        else:
+            self._cancel_timer()
+            self._schedule()
+        return True
+
     def stop(self) -> None:
         self._cancel_timer()
         self._interval_seconds = None

@@ -43,7 +43,7 @@ O ambiente prioritário é o Ubuntu 24.04 LTS ou mais recente, com Python 3.12+,
 
 ```bash
 sudo apt update
-sudo apt install python3 python3-venv python3-gi gir1.2-gtk-4.0 libnotify-bin
+sudo apt install python3 python3-venv python3-gi python3-gi-cairo gir1.2-gtk-4.0 libnotify-bin
 ```
 
 ### Instalação
@@ -97,6 +97,8 @@ As notificações usam os toasts do Windows. Enquanto o aplicativo estiver execu
 ## Uso
 
 Na aba **Plano**, defina diretamente quantos goles deseja tomar e de quanto em quanto tempo. Selecione **Iniciar plano** para abrir o dashboard e iniciar um plano contínuo. **Pausar** preserva o tempo restante e **Retomar** continua a contagem.
+
+No dashboard, os botões abaixo do cronômetro permitem pausar/retomar ou reiniciar somente a contagem do próximo lembrete. Reiniciar não apaga o histórico nem o progresso do plano.
 
 Para receber ajuda no cálculo, abra **Cálculo automático (opcional)**, informe os mL e o prazo e escolha uma opção:
 

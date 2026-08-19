@@ -13,7 +13,7 @@ Use português ou inglês em discussões. No código, prefira nomes técnicos cl
 No Ubuntu 24.04 LTS, prepare o projeto e execute as verificações com:
 
 ```bash
-sudo apt install python3-venv python3-gi gir1.2-gtk-4.0 libnotify-bin
+sudo apt install python3-venv python3-gi python3-gi-cairo gir1.2-gtk-4.0 libnotify-bin
 python3 -m venv --system-site-packages .venv
 source .venv/bin/activate
 python -m pip install -e . pytest ruff
