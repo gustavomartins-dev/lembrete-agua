@@ -1,6 +1,6 @@
 # Lembrete de Água 💧
 
-Aplicativo pessoal e open source para Ubuntu/Linux que exibe notificações em intervalos configuráveis, lembrando quantos goles de água a pessoa deve tomar.
+Aplicativo pessoal e open source para Ubuntu/Linux que cria um plano local de hidratação, envia lembretes confirmáveis e acompanha o histórico.
 
 > Projeto independente de Gustavo Martins. Não possui vínculo com a Chinalink nem com qualquer empresa.
 
@@ -8,38 +8,30 @@ Aplicativo pessoal e open source para Ubuntu/Linux que exibe notificações em i
 
 O usuário escolhe:
 
-- o intervalo entre os lembretes;
-- a quantidade de goles por lembrete;
+- quantos mililitros deseja beber;
+- em quanto tempo deseja cumprir essa meta;
 - se o aplicativo deve iniciar junto com a sessão;
 - se deseja pausar ou retomar as notificações.
 
-O aplicativo roda em segundo plano e mostra notificações nativas no desktop do Ubuntu.
+O aplicativo estima 25 mL por gole, limita cada lembrete a 5 goles e distribui automaticamente os lembretes pelo prazo. O histórico registra se a pessoa confirmou ou não cada ocorrência.
 
 ## Status
 
 ✅ MVP implementado. Melhorias e relatos de problemas são acompanhados nas [issues do projeto](../../issues).
 
-## Escopo do MVP
-
-- Interface simples para configurar intervalo e quantidade de goles.
-- Notificações nativas no Ubuntu.
-- Botões para iniciar, pausar e retomar os lembretes.
-- Persistência das preferências entre execuções.
-- Opção para iniciar automaticamente com a sessão do usuário.
-- Validação dos valores informados.
-- Instalação e execução documentadas.
-
-Veja os requisitos detalhados em [docs/REQUISITOS.md](docs/REQUISITOS.md).
-
 ## Recursos
 
-- Interface GTK 4 em português brasileiro, navegável por teclado.
-- Intervalos em minutos ou horas e quantidade positiva de goles.
-- Controles para iniciar, pausar, retomar e reaplicar a configuração.
-- Notificações nativas por `notify-send`, sem bloquear a interface.
+- Plano automático a partir de volume em mL e prazo em minutos ou horas.
+- Notificações clicáveis que abrem diretamente a confirmação do lembrete.
+- Respostas “bebi” e “não bebi”, com ocorrências pendentes recuperáveis.
+- Dashboard com timer circular, histórico recente e desempenho de 7 e 30 dias.
+- Controles para iniciar, pausar, retomar e substituir o plano.
 - Preferências locais em `~/.config/lembrete-agua/config.json`.
+- Histórico local em `~/.config/lembrete-agua/history.json`.
 - Inicialização opcional com a sessão por um arquivo `.desktop` do usuário.
 - Operação offline, sem conta, servidor, telemetria ou coleta de dados.
+
+Veja os requisitos detalhados em [docs/REQUISITOS.md](docs/REQUISITOS.md).
 
 ## Requisitos
 
@@ -73,11 +65,13 @@ Com o ambiente ativado, abra o aplicativo:
 lembrete-agua
 ```
 
-Defina o intervalo, a unidade e os goles e selecione **Iniciar**. O primeiro aviso aparece ao fim do intervalo escolhido. **Pausar** suspende o timer e **Retomar** inicia uma nova contagem completa. Se os valores forem alterados durante a execução, selecione **Iniciar** novamente para salvá-los e substituir o timer atual, sem duplicação.
+Na aba **Plano**, defina o volume e o prazo. A recomendação calculada aparece antes do início. Selecione **Iniciar plano** para abrir o dashboard e iniciar o timer. **Pausar** preserva o tempo restante e **Retomar** continua a contagem.
+
+Ao receber um aviso, clique na notificação ou em **Confirmar agora** para abrir a aba **Confirmação**. Responda **Sim, eu bebi** ou **Não bebi**. A resposta aparece imediatamente no histórico e atualiza o desempenho semanal e mensal. Lembretes ainda não respondidos ficam disponíveis no dashboard.
 
 Ao fechar a janela com os lembretes ativos, ela é ocultada e o aplicativo continua em segundo plano. Execute `lembrete-agua` outra vez para reabrir a mesma instância. Para encerrar o aplicativo, pause os lembretes e feche a janela.
 
-A opção **Iniciar com a sessão** cria `~/.config/autostart/lembrete-agua.desktop`. Ela deve ser ativada enquanto o aplicativo é executado pelo ambiente virtual que continuará instalado no mesmo caminho.
+A opção **Iniciar com a sessão** cria `~/.config/autostart/lembrete-agua.desktop`. O aplicativo também registra um lançador e um serviço D-Bus em `~/.local/share/` para permitir a ativação ao clicar em uma notificação. O ambiente virtual deve permanecer instalado no mesmo caminho.
 
 ## Desenvolvimento e testes
 
@@ -107,6 +101,8 @@ Para remover também preferências e inicialização automática:
 
 ```bash
 rm -f ~/.config/autostart/lembrete-agua.desktop
+rm -f ~/.local/share/applications/io.github.gustavomartinsdev.LembreteAgua.desktop
+rm -f ~/.local/share/dbus-1/services/io.github.gustavomartinsdev.LembreteAgua.service
 rm -rf ~/.config/lembrete-agua
 ```
 
@@ -115,7 +111,8 @@ Os últimos comandos apagam permanentemente apenas os dados locais criados pelo 
 ## Limitações do MVP
 
 - O MVP não possui ícone na bandeja; reabra a janela executando o comando novamente.
-- O aplicativo é um lembrete, não registra consumo nem oferece orientação médica.
+- A estimativa de 25 mL por gole é operacional, não uma medição exata.
+- O aplicativo registra confirmações, mas não oferece orientação médica.
 - A integração visual depende do serviço de notificações da sessão Linux.
 
 ## Como contribuir
