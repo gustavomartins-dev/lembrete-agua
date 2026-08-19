@@ -42,14 +42,28 @@ class ReminderScheduler:
             return max(0.0, self._deadline - self._clock())
         return None
 
-    def start(self, interval_seconds: float, callback: Callable[[], None]) -> None:
+    def start(
+        self,
+        interval_seconds: float,
+        callback: Callable[[], None],
+        *,
+        initial_delay: float | None = None,
+    ) -> None:
         if interval_seconds <= 0:
             raise ValueError("O intervalo deve ser maior que zero.")
         self.stop()
         self._interval_seconds = interval_seconds
         self._callback = callback
-        self._schedule()
+        self._schedule(initial_delay)
         self.state = SchedulerState.RUNNING
+
+    def update_interval(self, interval_seconds: float) -> None:
+        if interval_seconds <= 0:
+            raise ValueError("O intervalo deve ser maior que zero.")
+        if self.state is SchedulerState.STOPPED:
+            raise RuntimeError("Não há contagem ativa para alterar.")
+        self._interval_seconds = interval_seconds
+        self.reset_countdown()
 
     def pause(self) -> None:
         if self.state is not SchedulerState.RUNNING:

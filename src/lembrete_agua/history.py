@@ -1,15 +1,15 @@
 from __future__ import annotations
 
 import json
-import os
-import tempfile
+import sqlite3
 import uuid
-from dataclasses import asdict, dataclass, replace
+from dataclasses import dataclass
 from datetime import UTC, datetime
 from enum import StrEnum
 from pathlib import Path
 
-from lembrete_agua.config import user_config_dir
+from lembrete_agua.config_path import user_config_dir
+from lembrete_agua.database import Database
 
 
 class ReminderStatus(StrEnum):
@@ -41,85 +41,93 @@ class ReminderRecord:
 
 class HistoryStore:
     def __init__(self, path: Path | None = None) -> None:
-        self.path = path or user_config_dir() / "history.json"
+        self.database = Database(path)
+        self.path = self.database.path
+        self.legacy_path = user_config_dir() / "history.json" if path is None else None
 
     def load(self) -> list[ReminderRecord]:
         try:
-            raw = json.loads(self.path.read_text(encoding="utf-8"))
-        except (OSError, json.JSONDecodeError):
+            with self.database.connect() as connection:
+                rows = connection.execute(
+                    "SELECT * FROM reminders ORDER BY scheduled_at"
+                ).fetchall()
+        except sqlite3.DatabaseError:
             return []
-        if not isinstance(raw, list):
-            return []
-        records: list[ReminderRecord] = []
-        for item in raw:
+        if not rows and self.legacy_path is not None and self.legacy_path.exists():
             try:
-                if not isinstance(item, dict):
-                    continue
-                records.append(
-                    ReminderRecord(
-                        id=str(item["id"]),
-                        session_id=str(item["session_id"]),
-                        scheduled_at=str(item["scheduled_at"]),
-                        sips=int(item["sips"]),
-                        milliliters=int(item["milliliters"]),
-                        status=ReminderStatus(str(item["status"])),
-                        responded_at=(
-                            str(item["responded_at"]) if item.get("responded_at") else None
-                        ),
-                    )
-                )
-            except (KeyError, TypeError, ValueError):
-                continue
-        return records
+                raw = json.loads(self.legacy_path.read_text(encoding="utf-8"))
+                for item in raw if isinstance(raw, list) else []:
+                    record = self._parse_legacy(item)
+                    if record is not None:
+                        self.add(record)
+                return self.load()
+            except (OSError, json.JSONDecodeError):
+                return []
+        return [self._from_row(row) for row in rows]
+
+    @staticmethod
+    def _from_row(row: object) -> ReminderRecord:
+        return ReminderRecord(
+            id=str(row["id"]),
+            session_id=str(row["session_id"]),
+            scheduled_at=str(row["scheduled_at"]),
+            sips=int(row["sips"]),
+            milliliters=int(row["milliliters"]),
+            status=ReminderStatus(str(row["status"])),
+            responded_at=str(row["responded_at"]) if row["responded_at"] else None,
+        )
+
+    @staticmethod
+    def _parse_legacy(item: object) -> ReminderRecord | None:
+        try:
+            if not isinstance(item, dict):
+                return None
+            return ReminderRecord(
+                id=str(item["id"]),
+                session_id=str(item["session_id"]),
+                scheduled_at=str(item["scheduled_at"]),
+                sips=int(item["sips"]),
+                milliliters=int(item["milliliters"]),
+                status=ReminderStatus(str(item["status"])),
+                responded_at=str(item["responded_at"]) if item.get("responded_at") else None,
+            )
+        except (KeyError, TypeError, ValueError):
+            return None
 
     def add(self, record: ReminderRecord) -> None:
-        records = self.load()
-        records.append(record)
-        self._save(records)
+        with self.database.connect() as connection:
+            connection.execute(
+                """
+                INSERT OR IGNORE INTO reminders
+                    (id, session_id, scheduled_at, sips, milliliters, status, responded_at)
+                VALUES (?, ?, ?, ?, ?, ?, ?)
+                """,
+                (
+                    record.id,
+                    record.session_id,
+                    record.scheduled_at,
+                    record.sips,
+                    record.milliliters,
+                    record.status.value,
+                    record.responded_at,
+                ),
+            )
 
     def get(self, record_id: str) -> ReminderRecord | None:
-        return next((record for record in self.load() if record.id == record_id), None)
+        with self.database.connect() as connection:
+            row = connection.execute(
+                "SELECT * FROM reminders WHERE id = ?", (record_id,)
+            ).fetchone()
+        return self._from_row(row) if row is not None else None
 
     def respond(self, record_id: str, drank: bool) -> ReminderRecord | None:
-        records = self.load()
-        updated: ReminderRecord | None = None
-        for index, record in enumerate(records):
-            if record.id != record_id:
-                continue
-            updated = replace(
-                record,
-                status=ReminderStatus.DRANK if drank else ReminderStatus.SKIPPED,
-                responded_at=datetime.now(UTC).isoformat(),
+        with self.database.connect() as connection:
+            cursor = connection.execute(
+                "UPDATE reminders SET status = ?, responded_at = ? WHERE id = ?",
+                (
+                    (ReminderStatus.DRANK if drank else ReminderStatus.SKIPPED).value,
+                    datetime.now(UTC).isoformat(),
+                    record_id,
+                ),
             )
-            records[index] = updated
-            break
-        if updated is not None:
-            self._save(records)
-        return updated
-
-    def _save(self, records: list[ReminderRecord]) -> None:
-        self.path.parent.mkdir(mode=0o700, parents=True, exist_ok=True)
-        temporary_path: Path | None = None
-        try:
-            with tempfile.NamedTemporaryFile(
-                "w",
-                encoding="utf-8",
-                dir=self.path.parent,
-                prefix=".history-",
-                suffix=".tmp",
-                delete=False,
-            ) as temporary:
-                payload = [
-                    {**asdict(record), "status": record.status.value} for record in records
-                ]
-                json.dump(payload, temporary, ensure_ascii=False, indent=2)
-                temporary.write("\n")
-                temporary.flush()
-                os.fsync(temporary.fileno())
-                temporary_path = Path(temporary.name)
-            temporary_path.chmod(0o600)
-            os.replace(temporary_path, self.path)
-        finally:
-            if temporary_path is not None and temporary_path.exists():
-                temporary_path.unlink()
-
+        return self.get(record_id) if cursor.rowcount else None
