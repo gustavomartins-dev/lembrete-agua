@@ -18,7 +18,7 @@ class NotificationService:
     ) -> None:
         self._runner = runner
 
-    def send(self, sips: int) -> None:
+    def send(self, sips: int) -> bool:
         command: Sequence[str] = (
             "notify-send",
             "--app-name=Lembrete de Água",
@@ -26,5 +26,8 @@ class NotificationService:
             NOTIFICATION_TITLE,
             reminder_message(sips),
         )
-        self._runner(command, check=False, timeout=10, text=True)
-
+        try:
+            result = self._runner(command, check=False, timeout=10, text=True)
+        except (OSError, subprocess.TimeoutExpired):
+            return False
+        return result.returncode == 0
