@@ -1,0 +1,25 @@
+name: Relatar problema
+description: Informe um comportamento incorreto
+title: "[Bug]: "
+labels: ["bug"]
+body:
+  - type: textarea
+    id: description
+    attributes:
+      label: O que aconteceu?
+    validations:
+      required: true
+  - type: textarea
+    id: reproduce
+    attributes:
+      label: Como reproduzir?
+      placeholder: Liste os passos e o resultado observado.
+    validations:
+      required: true
+  - type: input
+    id: ubuntu
+    attributes:
+      label: Versão do Ubuntu e ambiente gráfico
+      placeholder: Ubuntu 24.04 LTS, GNOME
+    validations:
+      required: true

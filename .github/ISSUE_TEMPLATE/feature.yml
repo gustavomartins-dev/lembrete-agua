@@ -1,0 +1,23 @@
+name: Nova funcionalidade
+description: Sugira uma melhoria para o Lembrete de Água
+title: "[Feature]: "
+labels: ["enhancement"]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problema ou necessidade
+      description: O que você gostaria de resolver?
+    validations:
+      required: true
+  - type: textarea
+    id: solution
+    attributes:
+      label: Solução proposta
+      description: Descreva o comportamento esperado.
+    validations:
+      required: true
+  - type: textarea
+    id: context
+    attributes:
+      label: Contexto adicional
