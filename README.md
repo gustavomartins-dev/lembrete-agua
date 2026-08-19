@@ -29,7 +29,7 @@ Opcionalmente, um painel recolhido calcula três planos a partir de uma meta em 
 - Dashboard com timer circular, histórico recente e desempenho de 7 e 30 dias.
 - Ícone próprio no menu, na janela e nas notificações.
 - Controles para iniciar, pausar, retomar e substituir o plano.
-- Preferências e histórico locais na pasta de configuração do sistema.
+- Preferências, histórico e timer ativo em um banco SQLite local.
 - Inicialização opcional com a sessão por um arquivo `.desktop` do usuário.
 - Operação offline, sem conta, servidor, telemetria ou coleta de dados.
 
@@ -98,7 +98,9 @@ As notificações usam os toasts do Windows. Enquanto o aplicativo estiver execu
 
 Na aba **Plano**, defina diretamente quantos goles deseja tomar e de quanto em quanto tempo. Selecione **Iniciar plano** para abrir o dashboard e iniciar um plano contínuo. **Pausar** preserva o tempo restante e **Retomar** continua a contagem.
 
-No dashboard, os botões abaixo do cronômetro permitem pausar/retomar ou reiniciar somente a contagem do próximo lembrete. Reiniciar não apaga o histórico nem o progresso do plano.
+No dashboard, os botões abaixo do cronômetro permitem pausar/retomar ou reiniciar somente a contagem do próximo lembrete. Também é possível informar um novo intervalo e selecionar **Aplicar** durante um plano ativo. Essas ações não apagam o histórico nem o progresso.
+
+O banco `lembrete-agua.sqlite3` fica em `~/.config/lembrete-agua/` no Linux e em `%APPDATA%\Lembrete de Agua` no Windows. Ao reabrir o aplicativo, o plano, a pausa e o prazo exato do próximo aviso são restaurados. Arquivos JSON de versões anteriores são migrados automaticamente.
 
 Para receber ajuda no cálculo, abra **Cálculo automático (opcional)**, informe os mL e o prazo e escolha uma opção:
 
