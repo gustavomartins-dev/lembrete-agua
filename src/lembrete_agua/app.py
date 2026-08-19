@@ -14,6 +14,7 @@ from lembrete_agua.autostart import (
     AutostartManager,
     DbusServiceManager,
     DesktopEntryManager,
+    IconManager,
 )
 from lembrete_agua.config import ConfigStore
 from lembrete_agua.history import HistoryStore, ReminderRecord, ReminderStatus
@@ -89,6 +90,8 @@ class ReminderWindow(Gtk.ApplicationWindow):
         self._autostart = AutostartManager()
         self._scheduler = ReminderScheduler(GLib.timeout_add, GLib.source_remove)
         self._preferences = self._store.load()
+        if self._preferences.autostart:
+            self._autostart.set_enabled(True)
         self._plan: HydrationPlan | None = None
         self._session_id: str | None = None
         self._reminder_number = 0
@@ -259,7 +262,7 @@ class ReminderWindow(Gtk.ApplicationWindow):
         self._target_ml.set_value(preferences.target_ml)
         self._duration.set_value(preferences.duration)
         self._unit.set_selected(0 if preferences.unit is DurationUnit.MINUTES else 1)
-        enabled = preferences.autostart and self._autostart.is_enabled()
+        enabled = self._autostart.is_enabled()
         self._autostart_switch.set_active(enabled)
         if enabled != preferences.autostart:
             self._preferences = replace(preferences, autostart=enabled)
@@ -474,6 +477,8 @@ class ReminderWindow(Gtk.ApplicationWindow):
 class WaterReminderApplication(Gtk.Application):
     def __init__(self) -> None:
         super().__init__(application_id=APPLICATION_ID)
+        IconManager().install()
+        Gtk.Window.set_default_icon_name(APPLICATION_ID)
         DesktopEntryManager().install()
         DbusServiceManager().install()
         action = Gio.SimpleAction.new("confirm-reminder", GLib.VariantType.new("s"))
@@ -494,6 +499,7 @@ class WaterReminderApplication(Gtk.Application):
 
     def send_reminder_notification(self, record: ReminderRecord) -> None:
         notification = Gio.Notification.new(NOTIFICATION_TITLE)
+        notification.set_icon(Gio.ThemedIcon.new(APPLICATION_ID))
         notification.set_body(
             f"{reminder_message(record.sips)} ({record.milliliters} mL). Clique para confirmar."
         )

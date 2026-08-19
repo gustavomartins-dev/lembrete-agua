@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" role="img" aria-label="Gota de água">
+  <defs>
+    <linearGradient id="background" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#31b9ff"/>
+      <stop offset="1" stop-color="#0877d1"/>
+    </linearGradient>
+    <linearGradient id="drop" x1="0.2" y1="0" x2="0.8" y2="1">
+      <stop offset="0" stop-color="#ffffff" stop-opacity="0.98"/>
+      <stop offset="1" stop-color="#d9f3ff" stop-opacity="0.88"/>
+    </linearGradient>
+  </defs>
+  <rect x="8" y="8" width="240" height="240" rx="58" fill="url(#background)"/>
+  <path d="M128 42C108 72 69 116 69 157c0 35 26 61 59 61s59-26 59-61c0-41-39-85-59-115z" fill="url(#drop)"/>
+  <path d="M92 159c0 20 15 35 35 37" fill="none" stroke="#72c9ee" stroke-width="12" stroke-linecap="round"/>
+  <circle cx="105" cy="124" r="10" fill="#ffffff"/>
+</svg>

@@ -5,6 +5,7 @@ import shlex
 import shutil
 import sys
 from collections.abc import Sequence
+from importlib.resources import files
 from pathlib import Path
 
 from lembrete_agua.config import user_config_dir
@@ -47,6 +48,7 @@ class AutostartManager:
             "Name=Lembrete de Água\n"
             "Comment=Lembretes locais para beber água\n"
             f"Exec={executable}\n"
+            f"Icon={APPLICATION_ID}\n"
             "Terminal=false\n"
             "X-GNOME-Autostart-enabled=true\n"
         )
@@ -80,6 +82,7 @@ class DesktopEntryManager:
             "Name=Lembrete de Água\n"
             "Comment=Acompanhamento local de hidratação\n"
             f"Exec={shlex.join(self.command)}\n"
+            f"Icon={APPLICATION_ID}\n"
             "Terminal=false\n"
             "StartupNotify=true\n"
             "DBusActivatable=true\n"
@@ -89,6 +92,28 @@ class DesktopEntryManager:
         try:
             temporary.write_text(content, encoding="utf-8")
             temporary.chmod(0o600)
+            os.replace(temporary, self.path)
+        finally:
+            if temporary.exists():
+                temporary.unlink()
+
+
+class IconManager:
+    def __init__(self, path: Path | None = None) -> None:
+        data_home = Path(
+            os.environ.get("XDG_DATA_HOME", Path.home() / ".local" / "share")
+        )
+        self.path = path or (
+            data_home / "icons" / "hicolor" / "scalable" / "apps" / f"{APPLICATION_ID}.svg"
+        )
+
+    def install(self) -> None:
+        self.path.parent.mkdir(mode=0o700, parents=True, exist_ok=True)
+        source = files("lembrete_agua").joinpath("assets/lembrete-agua.svg")
+        temporary = self.path.with_suffix(".svg.tmp")
+        try:
+            temporary.write_bytes(source.read_bytes())
+            temporary.chmod(0o644)
             os.replace(temporary, self.path)
         finally:
             if temporary.exists():

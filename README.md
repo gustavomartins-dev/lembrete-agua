@@ -25,6 +25,7 @@ O aplicativo estima 25 mL por gole, limita cada lembrete a 5 goles e distribui a
 - Notificações clicáveis que abrem diretamente a confirmação do lembrete.
 - Respostas “bebi” e “não bebi”, com ocorrências pendentes recuperáveis.
 - Dashboard com timer circular, histórico recente e desempenho de 7 e 30 dias.
+- Ícone próprio no menu, na janela e nas notificações.
 - Controles para iniciar, pausar, retomar e substituir o plano.
 - Preferências locais em `~/.config/lembrete-agua/config.json`.
 - Histórico local em `~/.config/lembrete-agua/history.json`.
@@ -71,7 +72,7 @@ Ao receber um aviso, clique na notificação ou em **Confirmar agora** para abri
 
 Ao fechar a janela com os lembretes ativos, ela é ocultada e o aplicativo continua em segundo plano. Execute `lembrete-agua` outra vez para reabrir a mesma instância. Para encerrar o aplicativo, pause os lembretes e feche a janela.
 
-A opção **Iniciar com a sessão** cria `~/.config/autostart/lembrete-agua.desktop`. O aplicativo também registra um lançador e um serviço D-Bus em `~/.local/share/` para permitir a ativação ao clicar em uma notificação. O ambiente virtual deve permanecer instalado no mesmo caminho.
+A opção **Iniciar com a sessão** vem habilitada por padrão e cria `~/.config/autostart/lembrete-agua.desktop`. O aplicativo também instala seu ícone, um lançador e um serviço D-Bus em `~/.local/share/` para aparecer no menu e permitir a ativação ao clicar em uma notificação. O ambiente virtual deve permanecer instalado no mesmo caminho.
 
 ## Desenvolvimento e testes
 
@@ -103,6 +104,7 @@ Para remover também preferências e inicialização automática:
 rm -f ~/.config/autostart/lembrete-agua.desktop
 rm -f ~/.local/share/applications/io.github.gustavomartinsdev.LembreteAgua.desktop
 rm -f ~/.local/share/dbus-1/services/io.github.gustavomartinsdev.LembreteAgua.service
+rm -f ~/.local/share/icons/hicolor/scalable/apps/io.github.gustavomartinsdev.LembreteAgua.svg
 rm -rf ~/.config/lembrete-agua
 ```
 

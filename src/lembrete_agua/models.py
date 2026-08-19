@@ -18,7 +18,7 @@ class Preferences:
     target_ml: int = 500
     duration: int = 2
     unit: DurationUnit = DurationUnit.HOURS
-    autostart: bool = False
+    autostart: bool = True
 
     @property
     def duration_seconds(self) -> int:

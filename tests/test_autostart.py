@@ -1,6 +1,11 @@
 from pathlib import Path
 
-from lembrete_agua.autostart import AutostartManager, DbusServiceManager, DesktopEntryManager
+from lembrete_agua.autostart import (
+    AutostartManager,
+    DbusServiceManager,
+    DesktopEntryManager,
+    IconManager,
+)
 
 
 def test_enable_and_disable_autostart(tmp_path: Path) -> None:
@@ -12,6 +17,7 @@ def test_enable_and_disable_autostart(tmp_path: Path) -> None:
     content = path.read_text(encoding="utf-8")
     assert "Type=Application" in content
     assert "Exec='/opt/Lembrete Água/bin/app' --quiet" in content
+    assert "Icon=io.github.gustavomartinsdev.LembreteAgua" in content
     assert manager.is_enabled()
 
     manager.set_enabled(False)
@@ -39,3 +45,13 @@ def test_install_dbus_service_for_notification_actions(tmp_path: Path) -> None:
     content = path.read_text(encoding="utf-8")
     assert "Name=io.github.gustavomartinsdev.LembreteAgua" in content
     assert "Exec='/opt/Lembrete Água/bin/app'" in content
+
+
+def test_install_original_svg_icon(tmp_path: Path) -> None:
+    path = tmp_path / "icons" / "app.svg"
+
+    IconManager(path).install()
+
+    content = path.read_text(encoding="utf-8")
+    assert content.startswith("<?xml")
+    assert "Gota de água" in content
