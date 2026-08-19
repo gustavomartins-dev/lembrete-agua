@@ -5,8 +5,8 @@ import os
 import tempfile
 from pathlib import Path
 
-from lembrete_agua.models import Preferences
-from lembrete_agua.validation import ValidationError, parse_preferences
+from lembrete_agua.models import PlanMode, PlanStrategy, Preferences
+from lembrete_agua.validation import ValidationError, validate_automatic, validate_manual
 
 
 def user_config_dir() -> Path:
@@ -26,21 +26,37 @@ class ConfigStore:
             autostart = data.get("autostart", False)
             if not isinstance(autostart, bool):
                 return Preferences()
-            return parse_preferences(
-                data.get("target_ml"),
-                data.get("duration"),
-                data.get("unit"),
+            sips, interval, unit = validate_manual(
+                data.get("sips"), data.get("interval"), data.get("unit")
+            )
+            target_ml, duration, duration_unit = validate_automatic(
+                data.get("target_ml"), data.get("duration"), data.get("duration_unit")
+            )
+            return Preferences(
+                sips=sips,
+                interval=interval,
+                unit=unit,
+                target_ml=target_ml,
+                duration=duration,
+                duration_unit=duration_unit,
+                plan_mode=PlanMode(str(data.get("plan_mode", PlanMode.MANUAL))),
+                strategy=PlanStrategy(str(data.get("strategy", PlanStrategy.BALANCED))),
                 autostart=autostart,
             )
-        except (OSError, json.JSONDecodeError, ValidationError):
+        except (OSError, json.JSONDecodeError, ValidationError, ValueError):
             return Preferences()
 
     def save(self, preferences: Preferences) -> None:
         self.path.parent.mkdir(mode=0o700, parents=True, exist_ok=True)
         payload = {
+            "sips": preferences.sips,
+            "interval": preferences.interval,
+            "unit": preferences.unit.value,
             "target_ml": preferences.target_ml,
             "duration": preferences.duration,
-            "unit": preferences.unit.value,
+            "duration_unit": preferences.duration_unit.value,
+            "plan_mode": preferences.plan_mode.value,
+            "strategy": preferences.strategy.value,
             "autostart": preferences.autostart,
         }
         temporary_path: Path | None = None
