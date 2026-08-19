@@ -1,6 +1,6 @@
 from pathlib import Path
 
-from lembrete_agua.autostart import AutostartManager
+from lembrete_agua.autostart import AutostartManager, DbusServiceManager, DesktopEntryManager
 
 
 def test_enable_and_disable_autostart(tmp_path: Path) -> None:
@@ -17,3 +17,25 @@ def test_enable_and_disable_autostart(tmp_path: Path) -> None:
     manager.set_enabled(False)
     assert not manager.is_enabled()
 
+
+def test_install_desktop_entry_for_notification_activation(tmp_path: Path) -> None:
+    path = tmp_path / "applications" / "app.desktop"
+    manager = DesktopEntryManager(path, ("/opt/Lembrete Água/bin/app",))
+
+    manager.install()
+
+    content = path.read_text(encoding="utf-8")
+    assert "Exec='/opt/Lembrete Água/bin/app'" in content
+    assert "X-GNOME-UsesNotifications=true" in content
+    assert "DBusActivatable=true" in content
+
+
+def test_install_dbus_service_for_notification_actions(tmp_path: Path) -> None:
+    path = tmp_path / "services" / "app.service"
+    manager = DbusServiceManager(path, ("/opt/Lembrete Água/bin/app",))
+
+    manager.install()
+
+    content = path.read_text(encoding="utf-8")
+    assert "Name=io.github.gustavomartinsdev.LembreteAgua" in content
+    assert "Exec='/opt/Lembrete Água/bin/app'" in content
