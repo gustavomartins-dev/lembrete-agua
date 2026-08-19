@@ -3,6 +3,7 @@ from pathlib import Path
 
 import pytest
 
+import lembrete_agua.config as config_module
 from lembrete_agua.config import ConfigStore
 from lembrete_agua.models import PlanMode, PlanStrategy, Preferences, TimeUnit
 
@@ -62,3 +63,10 @@ def test_previous_config_is_safely_migrated_to_defaults(tmp_path: Path) -> None:
 
 def test_missing_config_uses_defaults(tmp_path: Path) -> None:
     assert ConfigStore(tmp_path / "missing.json").load() == Preferences()
+
+
+def test_windows_config_uses_appdata(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
+    monkeypatch.setattr(config_module.sys, "platform", "win32")
+    monkeypatch.setenv("APPDATA", str(tmp_path))
+
+    assert config_module.user_config_dir() == tmp_path / "Lembrete de Agua"

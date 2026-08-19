@@ -3,8 +3,10 @@ from __future__ import annotations
 import os
 import shlex
 import shutil
+import subprocess
 import sys
 from collections.abc import Sequence
+from contextlib import suppress
 from importlib.resources import files
 from pathlib import Path
 
@@ -12,6 +14,7 @@ from lembrete_agua.config import user_config_dir
 
 DESKTOP_FILENAME = "lembrete-agua.desktop"
 APPLICATION_ID = "io.github.gustavomartinsdev.LembreteAgua"
+WINDOWS_RUN_KEY = r"Software\Microsoft\Windows\CurrentVersion\Run"
 
 
 def default_command() -> tuple[str, ...]:
@@ -60,6 +63,54 @@ class AutostartManager:
         finally:
             if temporary.exists():
                 temporary.unlink()
+
+
+class WindowsAutostartManager:
+    def __init__(
+        self,
+        command: Sequence[str] | None = None,
+        registry: object | None = None,
+    ) -> None:
+        if registry is None:
+            import winreg
+
+            registry = winreg
+        self.command = tuple(command or default_command())
+        self._registry = registry
+
+    def is_enabled(self) -> bool:
+        try:
+            with self._registry.OpenKey(
+                self._registry.HKEY_CURRENT_USER,
+                WINDOWS_RUN_KEY,
+                0,
+                self._registry.KEY_READ,
+            ) as key:
+                self._registry.QueryValueEx(key, "Lembrete de Água")
+            return True
+        except OSError:
+            return False
+
+    def set_enabled(self, enabled: bool) -> None:
+        with self._registry.CreateKey(
+            self._registry.HKEY_CURRENT_USER,
+            WINDOWS_RUN_KEY,
+        ) as key:
+            if enabled:
+                self._registry.SetValueEx(
+                    key,
+                    "Lembrete de Água",
+                    0,
+                    self._registry.REG_SZ,
+                    subprocess.list2cmdline(self.command),
+                )
+            else:
+                with suppress(OSError):
+                    self._registry.DeleteValue(key, "Lembrete de Água")
+
+
+def create_autostart_manager() -> AutostartManager | WindowsAutostartManager:
+    return WindowsAutostartManager() if sys.platform == "win32" else AutostartManager()
 
 
 class DesktopEntryManager:

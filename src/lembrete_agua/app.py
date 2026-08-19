@@ -11,10 +11,10 @@ import gi
 from lembrete_agua.analytics import period_stats
 from lembrete_agua.autostart import (
     APPLICATION_ID,
-    AutostartManager,
     DbusServiceManager,
     DesktopEntryManager,
     IconManager,
+    create_autostart_manager,
 )
 from lembrete_agua.config import ConfigStore
 from lembrete_agua.history import HistoryStore, ReminderRecord, ReminderStatus
@@ -27,7 +27,11 @@ from lembrete_agua.models import (
     build_hydration_plan,
     build_manual_plan,
 )
-from lembrete_agua.notifications import NOTIFICATION_TITLE, reminder_message
+from lembrete_agua.notifications import (
+    NOTIFICATION_TITLE,
+    WindowsNotificationService,
+    reminder_message,
+)
 from lembrete_agua.scheduler import ReminderScheduler, SchedulerState
 from lembrete_agua.validation import ValidationError, validate_automatic, validate_manual
 
@@ -90,7 +94,7 @@ class ReminderWindow(Gtk.ApplicationWindow):
         self._application = application
         self._store = ConfigStore()
         self._history = HistoryStore()
-        self._autostart = AutostartManager()
+        self._autostart = create_autostart_manager()
         self._scheduler = ReminderScheduler(GLib.timeout_add, GLib.source_remove)
         self._preferences = self._store.load()
         self._plan_mode = self._preferences.plan_mode
@@ -592,10 +596,16 @@ class ReminderWindow(Gtk.ApplicationWindow):
 class WaterReminderApplication(Gtk.Application):
     def __init__(self) -> None:
         super().__init__(application_id=APPLICATION_ID)
-        IconManager().install()
+        self._windows_notifications: WindowsNotificationService | None = None
+        if sys.platform == "win32":
+            self._windows_notifications = WindowsNotificationService(
+                self._queue_windows_confirmation
+            )
+        else:
+            IconManager().install()
+            DesktopEntryManager().install()
+            DbusServiceManager().install()
         Gtk.Window.set_default_icon_name(APPLICATION_ID)
-        DesktopEntryManager().install()
-        DbusServiceManager().install()
         action = Gio.SimpleAction.new("confirm-reminder", GLib.VariantType.new("s"))
         action.connect("activate", self._on_confirm_action)
         self.add_action(action)
@@ -607,12 +617,26 @@ class WaterReminderApplication(Gtk.Application):
         window.present()
 
     def _on_confirm_action(self, _action: Gio.SimpleAction, target: GLib.Variant) -> None:
+        self._show_confirmation(target.get_string())
+
+    def _queue_windows_confirmation(self, record_id: str) -> None:
+        GLib.idle_add(self._show_confirmation, record_id)
+
+    def _show_confirmation(self, record_id: str) -> bool:
         window = self.get_active_window()
         if window is None:
             window = ReminderWindow(self)
-        window.show_confirmation(target.get_string())
+        window.show_confirmation(record_id)
+        return False
 
     def send_reminder_notification(self, record: ReminderRecord) -> None:
+        if self._windows_notifications is not None:
+            self._windows_notifications.send(
+                record.id,
+                record.sips,
+                record.milliliters,
+            )
+            return
         notification = Gio.Notification.new(NOTIFICATION_TITLE)
         notification.set_icon(Gio.ThemedIcon.new(APPLICATION_ID))
         notification.set_body(

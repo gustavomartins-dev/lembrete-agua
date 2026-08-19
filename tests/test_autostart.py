@@ -1,10 +1,12 @@
 from pathlib import Path
+from typing import Self
 
 from lembrete_agua.autostart import (
     AutostartManager,
     DbusServiceManager,
     DesktopEntryManager,
     IconManager,
+    WindowsAutostartManager,
 )
 
 
@@ -55,3 +57,48 @@ def test_install_original_svg_icon(tmp_path: Path) -> None:
     content = path.read_text(encoding="utf-8")
     assert content.startswith("<?xml")
     assert "Gota de água" in content
+
+
+def test_windows_autostart_uses_current_user_registry() -> None:
+    values: dict[str, str] = {}
+
+    class Key:
+        def __enter__(self) -> Self:
+            return self
+
+        def __exit__(self, *_args: object) -> None:
+            pass
+
+    class Registry:
+        HKEY_CURRENT_USER = "HKCU"
+        KEY_READ = 1
+        REG_SZ = 1
+
+        @staticmethod
+        def CreateKey(*_args: object) -> Key:
+            return Key()
+
+        OpenKey = CreateKey
+
+        @staticmethod
+        def SetValueEx(_key: Key, name: str, _reserved: int, _kind: int, value: str) -> None:
+            values[name] = value
+
+        @staticmethod
+        def QueryValueEx(_key: Key, name: str) -> tuple[str, int]:
+            if name not in values:
+                raise FileNotFoundError
+            return values[name], 1
+
+        @staticmethod
+        def DeleteValue(_key: Key, name: str) -> None:
+            values.pop(name)
+
+    command = (r"C:\Program Files\Lembrete\python.exe", "-m", "lembrete_agua")
+    manager = WindowsAutostartManager(command, Registry())
+    manager.set_enabled(True)
+
+    assert manager.is_enabled()
+    assert '"C:\\Program Files\\Lembrete\\python.exe"' in values["Lembrete de Água"]
+    manager.set_enabled(False)
+    assert not manager.is_enabled()
