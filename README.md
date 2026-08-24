@@ -2,6 +2,8 @@
 
 Aplicativo pessoal e open source para Ubuntu/Linux e Windows que cria um plano local de hidratação, envia lembretes confirmáveis e acompanha o histórico.
 
+> Projeto desenvolvido com auxílio integral de inteligência artificial, sob direção, decisões e validação de Gustavo Martins.
+
 > Projeto independente de Gustavo Martins. Não possui vínculo com a Chinalink nem com qualquer empresa.
 
 ## Ideia
