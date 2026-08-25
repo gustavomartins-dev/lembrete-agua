@@ -1,0 +1,171 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg
+  xmlns="http://www.w3.org/2000/svg"
+  viewBox="0 0 1200 520"
+  role="img"
+  aria-labelledby="hero-title hero-description"
+>
+  <title id="hero-title">Lembrete de Água</title>
+  <desc id="hero-description">
+    Ilustração azul de uma rotina de hidratação com gota, ondas e um painel de
+    lembretes mostrando cronômetro, plano ativo e progresso local.
+  </desc>
+
+  <defs>
+    <linearGradient id="hero-background" x1="70" y1="34" x2="1100" y2="490" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#061D2C"/>
+      <stop offset="0.52" stop-color="#0B4E78"/>
+      <stop offset="1" stop-color="#0AA9D6"/>
+    </linearGradient>
+    <linearGradient id="drop-gradient" x1="0" y1="0" x2="1" y2="1">
+      <stop stop-color="#F7FDFF"/>
+      <stop offset="1" stop-color="#99E9FF"/>
+    </linearGradient>
+    <linearGradient id="wave-gradient" x1="0" y1="0" x2="1" y2="0">
+      <stop stop-color="#18C7DF" stop-opacity="0.62"/>
+      <stop offset="1" stop-color="#78E7E0" stop-opacity="0.82"/>
+    </linearGradient>
+    <linearGradient id="timer-gradient" x1="0" y1="0" x2="1" y2="1">
+      <stop stop-color="#19B9F1"/>
+      <stop offset="1" stop-color="#47D8C9"/>
+    </linearGradient>
+    <radialGradient id="glow" cx="0" cy="0" r="1" gradientTransform="translate(896 208) rotate(90) scale(260)">
+      <stop stop-color="#7DEBFF" stop-opacity="0.34"/>
+      <stop offset="1" stop-color="#7DEBFF" stop-opacity="0"/>
+    </radialGradient>
+    <filter id="panel-shadow" x="-20%" y="-20%" width="140%" height="150%">
+      <feDropShadow dx="0" dy="18" stdDeviation="20" flood-color="#00131F" flood-opacity="0.34"/>
+    </filter>
+    <filter id="drop-shadow" x="-40%" y="-40%" width="180%" height="190%">
+      <feDropShadow dx="0" dy="12" stdDeviation="11" flood-color="#03273C" flood-opacity="0.35"/>
+    </filter>
+    <clipPath id="frame-clip">
+      <rect x="10" y="10" width="1180" height="500" rx="42"/>
+    </clipPath>
+  </defs>
+
+  <g clip-path="url(#frame-clip)">
+    <rect x="10" y="10" width="1180" height="500" rx="42" fill="url(#hero-background)"/>
+    <circle cx="944" cy="194" r="270" fill="url(#glow)"/>
+
+    <path
+      d="M10 414C143 360 238 452 372 419C517 383 574 348 722 392C891 442 1027 359 1190 389V510H10Z"
+      fill="#0B87B6"
+      fill-opacity="0.5"
+    />
+    <path
+      d="M10 447C174 396 275 489 438 448C598 408 704 401 864 446C1004 485 1088 423 1190 428V510H10Z"
+      fill="url(#wave-gradient)"
+    />
+    <path
+      d="M10 477C176 440 291 510 471 473C641 438 735 446 891 482C1010 509 1102 463 1190 461V510H10Z"
+      fill="#D8FAFF"
+      fill-opacity="0.18"
+    />
+
+    <g fill="#C8F7FF" fill-opacity="0.28">
+      <circle cx="68" cy="79" r="5"/>
+      <circle cx="527" cy="80" r="8"/>
+      <circle cx="584" cy="144" r="4"/>
+      <circle cx="1125" cy="83" r="7"/>
+      <circle cx="1150" cy="309" r="4"/>
+      <circle cx="637" cy="366" r="6"/>
+    </g>
+    <g fill="none" stroke="#BDEFFF" stroke-opacity="0.2" stroke-width="2">
+      <circle cx="555" cy="322" r="17"/>
+      <circle cx="1143" cy="142" r="13"/>
+      <circle cx="93" cy="373" r="20"/>
+    </g>
+
+    <g font-family="Inter, Segoe UI, Arial, sans-serif">
+      <g transform="translate(78 64)">
+        <rect width="216" height="34" rx="17" fill="#D6F8FF" fill-opacity="0.14" stroke="#C9F7FF" stroke-opacity="0.34"/>
+        <circle cx="20" cy="17" r="5" fill="#6BE4D4"/>
+        <text x="36" y="22" fill="#E8FBFF" font-size="12" font-weight="700" letter-spacing="1.6">LOCAL · PRIVADO · OFFLINE</text>
+      </g>
+
+      <text x="78" y="160" fill="#F5FDFF" font-size="52" font-weight="800" letter-spacing="-1.4">Lembrete de Água</text>
+      <text x="78" y="207" fill="#A9E8F8" font-size="23" font-weight="500">Uma pausa. Alguns goles.</text>
+      <text x="78" y="239" fill="#A9E8F8" font-size="23" font-weight="500">O dia continua.</text>
+
+      <g transform="translate(78 278)">
+        <g filter="url(#drop-shadow)">
+          <path
+            d="M50 0C37 20 11 50 11 77C11 100 28 117 50 117C72 117 89 100 89 77C89 50 63 20 50 0Z"
+            fill="url(#drop-gradient)"
+          />
+          <path d="M30 78C30 89 38 98 49 99" fill="none" stroke="#57C5EB" stroke-width="7" stroke-linecap="round"/>
+          <circle cx="36" cy="57" r="6" fill="#FFFFFF"/>
+        </g>
+        <g transform="translate(121 18)">
+          <text x="0" y="19" fill="#F2FCFF" font-size="15" font-weight="700">Seu ritmo</text>
+          <text x="0" y="43" fill="#A9E8F8" font-size="14">goles e intervalo livres</text>
+          <text x="0" y="79" fill="#F2FCFF" font-size="15" font-weight="700">Seus dados</text>
+          <text x="0" y="103" fill="#A9E8F8" font-size="14">salvos apenas no dispositivo</text>
+        </g>
+      </g>
+
+      <g transform="translate(680 52)" filter="url(#panel-shadow)">
+        <rect width="440" height="400" rx="28" fill="#F8FCFF"/>
+        <rect width="440" height="64" rx="28" fill="#EAF8FC"/>
+        <rect y="36" width="440" height="28" fill="#EAF8FC"/>
+
+        <g transform="translate(24 17)">
+          <rect width="31" height="31" rx="9" fill="#138AC7"/>
+          <path d="M15.5 6C11.8 11.4 7.5 17 7.5 21.2C7.5 26 11 29 15.5 29C20 29 23.5 26 23.5 21.2C23.5 17 19.2 11.4 15.5 6Z" fill="#F4FDFF"/>
+          <text x="44" y="20" fill="#123147" font-size="15" font-weight="750">Lembrete de Água</text>
+        </g>
+        <g transform="translate(291 17)">
+          <rect width="122" height="30" rx="15" fill="#DDF7F2"/>
+          <circle cx="18" cy="15" r="5" fill="#2BC5A8"/>
+          <text x="31" y="19" fill="#13745F" font-size="11" font-weight="800" letter-spacing="0.8">PLANO ATIVO</text>
+        </g>
+
+        <g transform="translate(24 82)">
+          <rect width="392" height="202" rx="22" fill="#FFFFFF" stroke="#D9ECF3"/>
+          <text x="24" y="32" fill="#5C7687" font-size="12" font-weight="700" letter-spacing="1">PRÓXIMO LEMBRETE</text>
+
+          <g transform="translate(104 112)">
+            <circle r="62" fill="none" stroke="#E5F2F6" stroke-width="12"/>
+            <circle
+              r="62"
+              fill="none"
+              stroke="url(#timer-gradient)"
+              stroke-width="12"
+              stroke-linecap="round"
+              stroke-dasharray="292 98"
+              transform="rotate(-90)"
+            />
+            <text x="0" y="5" fill="#133347" font-size="28" font-weight="800" text-anchor="middle">24:18</text>
+            <text x="0" y="25" fill="#6D8796" font-size="10" font-weight="700" text-anchor="middle" letter-spacing="0.8">MINUTOS</text>
+          </g>
+
+          <g transform="translate(205 66)">
+            <rect width="158" height="52" rx="14" fill="#EAF8FC"/>
+            <text x="17" y="21" fill="#668392" font-size="10" font-weight="700" letter-spacing="0.8">PRÓXIMA PAUSA</text>
+            <text x="17" y="41" fill="#12364C" font-size="14" font-weight="800">5 goles · 125 mL</text>
+            <rect y="66" width="158" height="52" rx="14" fill="#EFFBF8"/>
+            <text x="17" y="87" fill="#5E857B" font-size="10" font-weight="700" letter-spacing="0.8">MODO</text>
+            <text x="17" y="107" fill="#155F55" font-size="14" font-weight="800">Plano manual</text>
+          </g>
+        </g>
+
+        <g transform="translate(24 300)">
+          <rect width="122" height="72" rx="17" fill="#EAF8FC"/>
+          <text x="16" y="23" fill="#64808F" font-size="10" font-weight="700" letter-spacing="0.7">ÚLTIMOS 7 DIAS</text>
+          <text x="16" y="53" fill="#0B83BA" font-size="24" font-weight="800">84%</text>
+
+          <rect x="135" width="122" height="72" rx="17" fill="#EFFBF8"/>
+          <text x="151" y="23" fill="#64877E" font-size="10" font-weight="700" letter-spacing="0.7">HISTÓRICO</text>
+          <text x="151" y="53" fill="#178570" font-size="19" font-weight="800">no aparelho</text>
+
+          <rect x="270" width="122" height="72" rx="17" fill="#FFF8E6"/>
+          <text x="286" y="23" fill="#89764C" font-size="10" font-weight="700" letter-spacing="0.7">PRIVACIDADE</text>
+          <text x="286" y="53" fill="#775C1F" font-size="19" font-weight="800">100% local</text>
+        </g>
+      </g>
+    </g>
+  </g>
+
+  <rect x="10" y="10" width="1180" height="500" rx="42" fill="none" stroke="#B9F2FF" stroke-opacity="0.22" stroke-width="2"/>
+</svg>

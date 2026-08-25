@@ -4,6 +4,13 @@ Todas as mudanças relevantes deste projeto serão registradas neste arquivo.
 
 ## [Não publicado]
 
+### Adicionado
+
+- Pausa automática quando o lembrete anterior continua sem resposta no próximo horário.
+- Limpeza das notificações pertencentes ao aplicativo ao pausar automaticamente ou iniciar uma nova instância.
+- Notificações urgentes e de duração ampliada para destacar a necessidade de resposta.
+- Botão **Confirmar agora** registra o consumo diretamente pela notificação.
+
 ## [0.2.0] - 2026-08-19
 
 ### Adicionado

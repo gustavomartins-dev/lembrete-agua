@@ -1,59 +1,196 @@
-# Lembrete de Água 💧
+<div align="center">
+  <img
+    src="./docs/assets/lembrete-agua-hero.svg"
+    width="100%"
+    alt="Ilustração azul do Lembrete de Água com uma gota, ondas e um painel de hidratação"
+  />
 
-Aplicativo pessoal e open source para Ubuntu/Linux e Windows que cria um plano local de hidratação, envia lembretes confirmáveis e acompanha o histórico.
+  <p><sub>Ilustração conceitual do ciclo do aplicativo, com dados demonstrativos.</sub></p>
+
+  <h1>💧 Lembrete de Água</h1>
+
+  <p><strong>Uma pausa. Alguns goles. O dia continua.</strong></p>
+  <p>Um companheiro desktop gentil para transformar hidratação em um hábito simples, privado e constante.</p>
+
+  <p>
+    <a href="https://github.com/gustavomartins-dev/lembrete-agua/actions/workflows/quality.yml">
+      <img src="https://github.com/gustavomartins-dev/lembrete-agua/actions/workflows/quality.yml/badge.svg?branch=main" alt="Qualidade" />
+    </a>
+    <img src="https://img.shields.io/badge/Python-3.12%2B-3776AB?style=for-the-badge&logo=python&logoColor=white" alt="Python 3.12 ou mais recente" />
+    <img src="https://img.shields.io/badge/GTK-4-4A86CF?style=for-the-badge&logo=gnome&logoColor=white" alt="GTK 4" />
+    <img src="https://img.shields.io/badge/SQLite-local-0D7FA5?style=for-the-badge&logo=sqlite&logoColor=white" alt="SQLite local" />
+  </p>
+  <p>
+    <img src="https://img.shields.io/badge/status-MVP_funcional-20A88A?style=flat-square" alt="Status MVP funcional" />
+    <img src="https://img.shields.io/badge/plataformas-Ubuntu_%7C_Windows-1689C8?style=flat-square&logo=linux&logoColor=white" alt="Ubuntu e Windows" />
+    <img src="https://img.shields.io/badge/privacidade-100%25_local-15A6A0?style=flat-square" alt="Privacidade 100% local" />
+    <a href="./LICENSE">
+      <img src="https://img.shields.io/badge/licença-MIT-0A5276?style=flat-square" alt="Licença MIT" />
+    </a>
+  </p>
+</div>
+
+> [!NOTE]
+> Projeto pessoal e open source de **Gustavo Martins**. Não possui vínculo com
+> a Chinalink nem com qualquer outra empresa.
 
 > [!IMPORTANT]
-> **Este projeto foi desenvolvido com assistência substancial de inteligência artificial.**
-> A ideia, a direção, as decisões finais e a validação são de Gustavo Martins;
-> planejamento, implementação, testes e documentação contaram com o apoio de ferramentas de IA.
+> O aplicativo ajuda a lembrar de beber água, mas **não oferece orientação
+> médica**. Necessidades de hidratação variam de pessoa para pessoa.
 
-> Projeto independente de Gustavo Martins. Não possui vínculo com a Chinalink nem com qualquer empresa.
+## 🌊 Um hábito que encontra espaço no seu dia
 
-## Ideia
+O **Lembrete de Água** mantém uma contagem discreta no computador, avisa quando
+chega a hora de beber e registra a sua resposta. Você escolhe o ritmo; o
+aplicativo cuida da repetição sem exigir conta, internet ou envio de dados.
 
-No modo principal, o usuário escolhe:
+O objetivo é simples: reduzir a distância entre “preciso beber água” e o próximo
+gole.
 
-- quantos goles deseja tomar por lembrete;
-- o intervalo entre os lembretes;
-- se o aplicativo deve iniciar junto com a sessão;
-- se deseja pausar ou retomar as notificações.
+| 🔒 Privado por padrão | 📴 Funciona offline | 🫧 Sem conta | 📊 Progresso visível |
+| :---: | :---: | :---: | :---: |
+| dados só no dispositivo | nenhum servidor necessário | abra e comece a usar | histórico e métricas locais |
 
-Opcionalmente, um painel recolhido calcula três planos a partir de uma meta em mL e um prazo. O histórico registra se a pessoa confirmou ou não cada ocorrência.
+## 🔄 Do plano ao próximo gole
 
-## Status
+```mermaid
+flowchart LR
+    A["Defina goles e intervalo"] --> B["Acompanhe a contagem"]
+    B --> C["Receba o aviso nativo"]
+    C --> D{"Como você responde?"}
+    D -->|"Bebi"| E["Histórico e métricas"]
+    D -->|"Não bebi"| E
+    D -->|"Ainda não"| F["Lembrete pendente"]
+    F -->|"Responder antes"| E
+    F -->|"Chegou o próximo horário"| G["Pausa automática"]
+    G --> H["Resolva a pendência"]
+    H --> I["Retome o plano"]
+    I --> B
+    E --> B
+```
 
-✅ MVP implementado. Melhorias e relatos de problemas são acompanhados nas [issues do projeto](../../issues).
+Quando um aviso continua sem resposta até o próximo horário, o plano é pausado
+automaticamente e as notificações do aplicativo são recolhidas. A pendência
+permanece no dashboard para você responder com calma e retomar depois.
 
-## Recursos
+## ✨ O que já existe
 
-- Plano manual contínuo com goles e intervalo definidos livremente.
-- Calculadora opcional recolhida com recomendações Leve, Equilibrada e Intensiva.
-- Recomendação Equilibrada destacada como escolha principal.
-- Notificações clicáveis que abrem diretamente a confirmação do lembrete.
-- Respostas “bebi” e “não bebi”, com ocorrências pendentes recuperáveis.
-- Dashboard com timer circular, histórico recente e desempenho de 7 e 30 dias.
-- Ícone próprio no menu, na janela e nas notificações.
-- Controles para iniciar, pausar, retomar e substituir o plano.
-- Preferências, histórico e timer ativo em um banco SQLite local.
-- Inicialização opcional com a sessão por um arquivo `.desktop` do usuário.
-- Operação offline, sem conta, servidor, telemetria ou coleta de dados.
+| 🕰️ Rotina | 🔔 Lembretes | 📈 Acompanhamento | 🛡️ Confiabilidade |
+| --- | --- | --- | --- |
+| plano manual contínuo | notificações nativas clicáveis | cronômetro circular | um único timer ativo |
+| cálculo automático opcional | ação **Confirmar agora** | histórico de respostas | pausa e retomada sem perder o tempo |
+| intervalos em minutos ou horas | avisos urgentes e de duração ampliada | desempenho de 7 e 30 dias | restauração depois de reiniciar |
+| alteração do intervalo ativo | confirmação “bebi” ou “não bebi” | lembretes pendentes recuperáveis | migração de dados antigos |
 
-Veja os requisitos detalhados em [docs/REQUISITOS.md](docs/REQUISITOS.md).
+Outros cuidados já implementados:
 
-## Ubuntu/Linux
+- interface GTK 4 em português, dividida em **Plano**, **Dashboard** e
+  **Confirmação**;
+- inicialização opcional com a sessão, habilitada por padrão;
+- ícone próprio no menu e na janela, além das notificações no Linux;
+- execução em segundo plano enquanto um plano está ativo;
+- preferências, histórico e sessão ativa persistidos em SQLite;
+- operação sem telemetria, coleta de dados ou dependência de nuvem.
 
-### Requisitos
+Os requisitos completos estão em [docs/REQUISITOS.md](docs/REQUISITOS.md), e a
+evolução do produto é registrada no [CHANGELOG.md](CHANGELOG.md).
 
-O ambiente prioritário é o Ubuntu 24.04 LTS ou mais recente, com Python 3.12+, GTK 4 e libnotify. Em uma instalação do Ubuntu, instale os pacotes necessários:
+## 🧭 Escolha o seu ritmo
+
+### Plano manual
+
+Para quem já sabe o que funciona na própria rotina:
+
+1. escolha quantos goles deseja tomar;
+2. informe o intervalo;
+3. selecione minutos ou horas;
+4. inicie um plano contínuo.
+
+Durante a contagem, é possível pausar, retomar, reiniciar apenas o próximo
+intervalo ou aplicar um novo intervalo sem apagar o histórico.
+
+### Cálculo automático
+
+O painel **Cálculo automático (opcional)** distribui uma meta em mL dentro do
+prazo informado. Ele apresenta três ritmos antes de iniciar:
+
+| Estratégia | Até quantos goles por aviso | Sensação do ritmo |
+| --- | :---: | --- |
+| 🌱 **Leve** | 3 | porções menores e avisos mais frequentes |
+| 💧 **Equilibrada ★** | 5 | recomendação principal do aplicativo |
+| 🌊 **Intensiva** | 8 | porções maiores e avisos menos frequentes |
+
+Cada opção mostra previamente a quantidade de avisos e o intervalo calculado. O
+último lembrete ajusta o volume restante para completar a meta.
+
+> [!TIP]
+> O cálculo usa uma estimativa operacional de **25 mL por gole**. Ela ajuda a
+> montar o plano, mas não substitui uma medição real.
+
+## 🔔 Um aviso que espera pela sua resposta
+
+Ao chegar a hora, a notificação mostra a quantidade de goles e o volume
+estimado:
+
+- clicar no corpo do aviso abre a confirmação correspondente;
+- selecionar **Confirmar agora** registra diretamente que você bebeu;
+- responder pelo aplicativo atualiza o histórico e as métricas;
+- avisos ainda sem resposta continuam disponíveis no dashboard;
+- uma pendência mantida até o horário seguinte pausa o plano automaticamente.
+
+No Linux, as notificações usam a integração nativa da sessão. No Windows, o
+aplicativo usa toasts do sistema por meio de `windows-toasts`.
+
+## 📊 O dashboard
+
+O painel reúne o que importa sem transformar hidratação em uma planilha:
+
+- estado atual do plano;
+- cronômetro do próximo lembrete;
+- pausa, retomada e reinício da contagem;
+- alteração do intervalo em andamento;
+- quantidade de goles do próximo aviso;
+- ocorrências pendentes;
+- histórico recente;
+- desempenho consolidado de 7 e 30 dias.
+
+## 🔐 Privacidade faz parte da arquitetura
+
+Tudo funciona localmente. O projeto não possui cadastro, servidor, telemetria,
+analytics remoto ou sincronização em nuvem.
+
+| Sistema | Banco de dados local |
+| --- | --- |
+| Ubuntu/Linux | `~/.config/lembrete-agua/lembrete-agua.sqlite3` |
+| Windows | `%APPDATA%\Lembrete de Agua\lembrete-agua.sqlite3` |
+
+O SQLite guarda:
+
+- preferências do plano;
+- histórico de lembretes e respostas;
+- estado da sessão ativa;
+- prazo exato do próximo aviso;
+- tempo restante quando o plano está pausado.
+
+Ao reabrir o aplicativo, a contagem e o estado anterior são restaurados.
+Arquivos JSON criados por versões antigas são migrados automaticamente.
+
+## 🚀 Comece por aqui
+
+### Ubuntu/Linux
+
+O ambiente prioritário é o **Ubuntu 24.04 LTS ou mais recente**, com Python
+3.12+, GTK 4, PyGObject, Cairo e libnotify.
+
+Instale as dependências do sistema:
 
 ```bash
 sudo apt update
 sudo apt install python3 python3-venv python3-gi python3-gi-cairo gir1.2-gtk-4.0 libnotify-bin
 ```
 
-### Instalação
-
-Clone o repositório, entre na pasta e crie um ambiente virtual que enxergue o PyGObject instalado pelo Ubuntu:
+Clone o projeto e crie um ambiente virtual que consiga enxergar o PyGObject
+instalado pelo Ubuntu:
 
 ```bash
 git clone https://github.com/gustavomartins-dev/lembrete-agua.git
@@ -64,19 +201,20 @@ python -m pip install --upgrade pip
 python -m pip install -e .
 ```
 
-O modo editável é adequado ao projeto open source e cria o comando `lembrete-agua` dentro do ambiente virtual.
-
-### Execução
-
-Com o ambiente ativado, abra o aplicativo:
+Abra o aplicativo:
 
 ```bash
 lembrete-agua
 ```
 
-## Windows 10/11
+O modo editável cria esse comando dentro do ambiente virtual e mantém o clone
+pronto para receber atualizações.
 
-O GTK 4 com PyGObject é suportado no Windows por meio do ambiente MSYS2 UCRT64. Instale o [MSYS2](https://www.msys2.org/), abra o terminal **MSYS2 UCRT64** e execute:
+### Windows 10/11
+
+No Windows, GTK 4 e PyGObject são executados pelo ambiente **MSYS2 UCRT64**.
+Instale o [MSYS2](https://www.msys2.org/), abra o terminal **MSYS2 UCRT64** e
+execute:
 
 ```bash
 pacman -Syu
@@ -86,7 +224,7 @@ pacman -S --needed git mingw-w64-ucrt-x86_64-gtk4 \
   mingw-w64-ucrt-x86_64-python-pip
 ```
 
-Feche e abra novamente o terminal UCRT64 se a atualização solicitar. Depois instale o projeto:
+Feche e abra novamente o terminal UCRT64 se a atualização solicitar. Depois:
 
 ```bash
 git clone https://github.com/gustavomartins-dev/lembrete-agua.git
@@ -95,48 +233,118 @@ python -m pip install --user -e .
 python -m lembrete_agua
 ```
 
-A dependência `windows-toasts` é instalada automaticamente apenas no Windows. As preferências e o histórico ficam em `%APPDATA%\Lembrete de Agua`. O interruptor **Iniciar com a sessão** usa a chave `HKCU\Software\Microsoft\Windows\CurrentVersion\Run`, sem exigir privilégios de administrador.
+A dependência `windows-toasts` é instalada automaticamente apenas no Windows.
+O início com a sessão usa a chave
+`HKCU\Software\Microsoft\Windows\CurrentVersion\Run` e não exige privilégios
+de administrador.
 
-As notificações usam os toasts do Windows. Enquanto o aplicativo estiver executando o plano, clicar no toast traz a janela para frente e abre a confirmação correspondente.
+## 🫗 Primeiros passos
 
-## Uso
+1. Na aba **Plano**, escolha goles e intervalo ou abra o cálculo automático.
+2. Selecione **Iniciar plano**.
+3. Acompanhe o próximo aviso pelo dashboard.
+4. Ao receber a notificação, confirme se bebeu ou não.
+5. Consulte o histórico e o desempenho da rotina.
+6. Ajuste, pause ou retome o plano quando precisar.
 
-Na aba **Plano**, defina diretamente quantos goles deseja tomar e de quanto em quanto tempo. Selecione **Iniciar plano** para abrir o dashboard e iniciar um plano contínuo. **Pausar** preserva o tempo restante e **Retomar** continua a contagem.
+Ao fechar a janela com os lembretes ativos, ela é ocultada e o aplicativo
+continua em segundo plano. Execute `lembrete-agua` outra vez para trazer a mesma
+instância de volta. Para encerrar completamente, pause os lembretes e feche a
+janela.
 
-No dashboard, os botões abaixo do cronômetro permitem pausar/retomar ou reiniciar somente a contagem do próximo lembrete. Também é possível informar um novo intervalo e selecionar **Aplicar** durante um plano ativo. Essas ações não apagam o histórico nem o progresso.
+No Linux, a opção **Iniciar com a sessão** cria o arquivo
+`~/.config/autostart/lembrete-agua.desktop`. O aplicativo também instala seu
+ícone, um lançador e um serviço D-Bus em `~/.local/share/` para aparecer no
+menu e reagir ao clique nas notificações. O ambiente virtual deve permanecer no
+mesmo caminho.
 
-O banco `lembrete-agua.sqlite3` fica em `~/.config/lembrete-agua/` no Linux e em `%APPDATA%\Lembrete de Agua` no Windows. Ao reabrir o aplicativo, o plano, a pausa e o prazo exato do próximo aviso são restaurados. Arquivos JSON de versões anteriores são migrados automaticamente.
+## 🧱 Como o projeto está organizado
 
-Para receber ajuda no cálculo, abra **Cálculo automático (opcional)**, informe os mL e o prazo e escolha uma opção:
+```mermaid
+flowchart TB
+    UI["app.py<br/>GTK 4 e orquestração"] --> RULES["models.py + validation.py<br/>planos e entradas"]
+    UI --> TIMER["scheduler.py<br/>timer único"]
+    TIMER --> NATIVE["Gio / windows-toasts<br/>avisos nativos"]
+    NATIVE --> UI
+    UI --> STORES["config.py + history.py<br/>preferências e respostas"]
+    STORES --> DB[("database.py<br/>SQLite local")]
+    DB --> METRICS["analytics.py<br/>7 e 30 dias"]
+    METRICS --> UI
+    UI --> SYSTEM["autostart.py<br/>desktop, D-Bus e registro"]
+```
 
-- **Leve:** até 3 goles por aviso, com lembretes mais frequentes.
-- **Equilibrado ★:** até 5 goles por aviso; é a recomendação principal.
-- **Intensivo:** até 8 goles por aviso, com lembretes menos frequentes.
+```text
+lembrete-agua/
+├── src/lembrete_agua/
+│   ├── app.py             # interface GTK e ciclo da aplicação
+│   ├── models.py          # planos manual e automático
+│   ├── validation.py      # regras de entrada
+│   ├── scheduler.py       # contagem, pausa, retomada e reset
+│   ├── notifications.py   # toasts nativos do Windows
+│   ├── database.py        # schema e acesso SQLite
+│   ├── config.py          # preferências
+│   ├── history.py         # lembretes e respostas
+│   ├── analytics.py       # métricas por período
+│   ├── autostart.py       # integrações de inicialização
+│   └── assets/            # ícone original
+├── tests/                 # suíte automatizada
+├── docs/                  # requisitos e identidade visual
+└── .github/workflows/     # lint e testes no CI
+```
 
-Cada opção mostra previamente o número de avisos e o intervalo calculado. Editar novamente qualquer campo manual muda a seleção de volta para o modo manual.
+O agendador e as camadas de dados ficam separados da interface para permitir
+testes unitários sem disparar timers ou toasts reais. A interface GTK e o ciclo
+de notificações Gio/Linux ainda dependem de validação manual.
 
-Ao receber um aviso, clique na notificação ou em **Confirmar agora** para abrir a aba **Confirmação**. Responda **Sim, eu bebi** ou **Não bebi**. A resposta aparece imediatamente no histórico e atualiza o desempenho semanal e mensal. Lembretes ainda não respondidos ficam disponíveis no dashboard.
+## 🧪 Desenvolvimento e qualidade
 
-Ao fechar a janela com os lembretes ativos, ela é ocultada e o aplicativo continua em segundo plano. Execute `lembrete-agua` outra vez para reabrir a mesma instância. Para encerrar o aplicativo, pause os lembretes e feche a janela.
-
-A opção **Iniciar com a sessão** vem habilitada por padrão e cria `~/.config/autostart/lembrete-agua.desktop`. O aplicativo também instala seu ícone, um lançador e um serviço D-Bus em `~/.local/share/` para aparecer no menu e permitir a ativação ao clicar em uma notificação. O ambiente virtual deve permanecer instalado no mesmo caminho.
-
-## Desenvolvimento e testes
-
-Instale as ferramentas de desenvolvimento e execute as mesmas verificações da integração contínua:
+Com o ambiente virtual ativado:
 
 ```bash
-source .venv/bin/activate
 python -m pip install pytest ruff
 ruff check .
 pytest
 ```
 
-O código está separado em interface, modelos/validação, configuração, autostart, notificações e agendamento. As integrações com GTK, timers, arquivos e comandos do sistema possuem limites claros para permitir testes sem emitir notificações reais.
+O workflow [`quality.yml`](.github/workflows/quality.yml) repete lint e testes em
+Ubuntu 24.04 com Python 3.12 a cada push e pull request.
 
-## Desinstalação
+A suíte cobre, entre outros pontos:
 
-Na pasta clonada, remova o pacote e o ambiente virtual:
+- validação de campos e estratégias de plano;
+- pluralização e ações das notificações;
+- proteção contra timers duplicados;
+- pausa, retomada, reset e alteração de intervalo;
+- persistência e recuperação segura de preferências;
+- histórico, métricas e lembretes pendentes;
+- SQLite, autostart Linux e registro do Windows.
+
+## 🌱 Fluxo de contribuição
+
+As mudanças percorrem `local` → `dev` → `prod`; a `main` espelha a versão
+estável publicada em `prod`.
+
+```mermaid
+flowchart LR
+    LOCAL["local<br/>desenvolvimento"] --> DEV["dev<br/>integração"]
+    DEV --> PROD["prod<br/>versão validada"]
+    PROD --> MAIN["main<br/>espelho estável"]
+```
+
+Para contribuir:
+
+1. leia o [guia de contribuição](CONTRIBUTING.md);
+2. escolha ou abra uma [issue](https://github.com/gustavomartins-dev/lembrete-agua/issues);
+3. crie a mudança a partir de `local`;
+4. execute `ruff check .` e `pytest`;
+5. abra um pull request explicando a solução e a validação.
+
+## 🧹 Desinstalação
+
+<details>
+<summary><strong>Ubuntu/Linux</strong></summary>
+
+Na pasta clonada:
 
 ```bash
 source .venv/bin/activate
@@ -145,7 +353,8 @@ deactivate
 rm -rf .venv
 ```
 
-Para remover também preferências e inicialização automática:
+Para remover também preferências, histórico e integrações criadas pelo
+aplicativo:
 
 ```bash
 rm -f ~/.config/autostart/lembrete-agua.desktop
@@ -155,9 +364,15 @@ rm -f ~/.local/share/icons/hicolor/scalable/apps/io.github.gustavomartinsdev.Lem
 rm -rf ~/.config/lembrete-agua
 ```
 
-Os últimos comandos apagam permanentemente apenas os dados locais criados pelo aplicativo.
+Os últimos comandos apagam permanentemente apenas os dados locais criados pelo
+aplicativo.
 
-No Windows, execute no terminal UCRT64:
+</details>
+
+<details>
+<summary><strong>Windows</strong></summary>
+
+No terminal MSYS2 UCRT64:
 
 ```bash
 python -m pip uninstall lembrete-agua windows-toasts
@@ -166,22 +381,31 @@ reg delete 'HKCU\Software\Microsoft\Windows\CurrentVersion\Run' \
   /v 'Lembrete de Água' /f
 ```
 
-## Limitações do MVP
+</details>
 
-- O MVP não possui ícone na bandeja; reabra a janela executando o comando novamente.
-- A estimativa de 25 mL por gole é operacional, não uma medição exata.
-- O aplicativo registra confirmações, mas não oferece orientação médica.
-- A integração visual depende do serviço de notificações da sessão Linux.
-- A integração Windows foi coberta por testes automatizados, mas precisa de validação visual final em uma máquina Windows 10/11.
+## 🫧 Limites atuais
 
-## Como contribuir
+- o MVP ainda não possui ícone na bandeja do sistema;
+- a estimativa de 25 mL por gole não é uma medição clínica;
+- a aparência e a duração do aviso dependem do serviço de notificações da
+  sessão Linux;
+- a integração Windows possui testes automatizados, mas ainda precisa de uma
+  validação visual final em uma máquina Windows 10/11;
+- não existem aplicativo móvel, sincronização em nuvem, contas ou histórico
+  compartilhado entre dispositivos;
+- macOS não faz parte das plataformas documentadas atualmente.
 
-Consulte [CONTRIBUTING.md](CONTRIBUTING.md), escolha uma issue e envie um pull request. Ao contribuir, você concorda que sua contribuição será publicada sob a licença MIT.
+## 🤖 Bastidores e transparência
+
+> [!IMPORTANT]
+> Este projeto contou com **assistência substancial de inteligência artificial**
+> em planejamento, implementação, testes e documentação. A visão, as
+> prioridades, as decisões finais e a validação pertencem a Gustavo Martins.
 
 <details>
-<summary>Prompt original para implementar o projeto com IA no VS Code</summary>
+<summary><strong>Ver o prompt original que deu início ao MVP</strong></summary>
 
-## Prompt para usar na IA do VS Code
+### Prompt para usar na IA do VS Code
 
 Copie todo o texto abaixo e cole no chat da IA com este repositório aberto:
 
@@ -226,6 +450,13 @@ Comece lendo os arquivos e planejando. Em seguida, implemente o MVP completo, to
 
 </details>
 
-## Licença
+## 📄 Licença
 
 Distribuído sob a [Licença MIT](LICENSE).
+
+<div align="center">
+  <br />
+  <img src="./src/lembrete_agua/assets/lembrete-agua.svg" width="72" alt="Ícone de gota do Lembrete de Água" />
+  <p><strong>Cuide do próximo gole. O resto pode esperar alguns segundos.</strong></p>
+  <p>Feito por <a href="https://github.com/gustavomartins-dev">Gustavo Martins</a>.</p>
+</div>
