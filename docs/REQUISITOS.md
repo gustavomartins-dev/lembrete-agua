@@ -32,6 +32,7 @@ Ajudar pessoas que usam Ubuntu a criar o hábito de beber água por meio de lemb
 - RF12: oferecer recomendações Leve, Equilibrada e Intensiva, destacando a Equilibrada.
 - RF13: permitir alterar e reiniciar o intervalo de uma contagem ativa.
 - RF14: persistir preferências, histórico e sessão ativa em SQLite e restaurar o prazo após reinício.
+- RF15: pausar o plano quando o lembrete anterior não for respondido até o próximo disparo e recolher as notificações do aplicativo.
 
 ## Requisitos não funcionais
 

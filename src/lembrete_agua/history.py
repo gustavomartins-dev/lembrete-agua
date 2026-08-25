@@ -120,6 +120,19 @@ class HistoryStore:
             ).fetchone()
         return self._from_row(row) if row is not None else None
 
+    def pending_for_session(self, session_id: str) -> list[ReminderRecord]:
+        """Retorna os lembretes ainda sem resposta de uma sessão."""
+        with self.database.connect() as connection:
+            rows = connection.execute(
+                """
+                SELECT * FROM reminders
+                WHERE session_id = ? AND status = ?
+                ORDER BY scheduled_at
+                """,
+                (session_id, ReminderStatus.PENDING.value),
+            ).fetchall()
+        return [self._from_row(row) for row in rows]
+
     def respond(self, record_id: str, drank: bool) -> ReminderRecord | None:
         with self.database.connect() as connection:
             cursor = connection.execute(

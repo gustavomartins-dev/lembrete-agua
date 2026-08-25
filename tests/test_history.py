@@ -35,6 +35,18 @@ def test_history_adds_and_responds_to_reminder(tmp_path: Path) -> None:
     assert store.get(record.id) == updated
 
 
+def test_history_filters_pending_reminders_by_session(tmp_path: Path) -> None:
+    store = HistoryStore(tmp_path / "history.sqlite3")
+    pending = ReminderRecord.create("current", 5, 125)
+    answered = ReminderRecord.create("current", 3, 75)
+    another_session = ReminderRecord.create("other", 2, 50)
+    for record in (pending, answered, another_session):
+        store.add(record)
+    store.respond(answered.id, True)
+
+    assert store.pending_for_session("current") == [pending]
+
+
 def test_invalid_history_entries_are_ignored(tmp_path: Path) -> None:
     path = tmp_path / "history.json"
     path.write_text('[{"invalid": true}, "text"]', encoding="utf-8")

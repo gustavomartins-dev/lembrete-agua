@@ -474,6 +474,13 @@ class ReminderWindow(Gtk.ApplicationWindow):
     def _create_reminder(self) -> None:
         if self._plan is None or self._session_id is None:
             return
+        if self._history.pending_for_session(self._session_id):
+            self._scheduler.pause()
+            self._application.clear_reminder_notifications()
+            self._persist_active_session()
+            self._update_state()
+            self._update_dashboard()
+            return
         self._reminder_number += 1
         record = ReminderRecord.create(
             self._session_id,
@@ -520,18 +527,24 @@ class ReminderWindow(Gtk.ApplicationWindow):
         if self._selected_record_id is None:
             self._confirmation_status.set_text("Nenhum lembrete selecionado.")
             return
+        if not self.answer_reminder(self._selected_record_id, drank):
+            return
+        self._confirmation_status.set_text("Resposta salva no seu histórico.")
+        self._stack.set_visible_child_name("dashboard")
+
+    def answer_reminder(self, record_id: str, drank: bool) -> bool:
+        """Registra uma resposta, inclusive quando acionada direto pela notificação."""
         try:
-            record = self._history.respond(self._selected_record_id, drank)
+            record = self._history.respond(record_id, drank)
         except OSError as error:
             self._show_error(f"Não foi possível salvar a resposta: {error}")
-            return
+            return False
         if record is None:
             self._confirmation_status.set_text("Este lembrete não existe mais.")
-            return
+            return False
         self._application.withdraw_notification(record.id)
-        self._confirmation_status.set_text("Resposta salva no seu histórico.")
         self._update_dashboard()
-        self._stack.set_visible_child_name("dashboard")
+        return True
 
     def _on_pause_resume(self, _button: Gtk.Button) -> None:
         if self._scheduler.state is SchedulerState.RUNNING:
@@ -660,8 +673,14 @@ class ReminderWindow(Gtk.ApplicationWindow):
         remaining = self._scheduler.remaining_seconds
         self._timer_ring.update(remaining, total)
         if self._scheduler.state is SchedulerState.PAUSED and remaining is not None:
+            unanswered = bool(
+                self._session_id
+                and self._history.pending_for_session(self._session_id)
+            )
             self._next_label.set_text(
-                f"Pausado · contagem reinicia em {format_duration(remaining)} ao retomar"
+                "Pausado automaticamente · responda ao lembrete pendente para continuar"
+                if unanswered
+                else f"Pausado · contagem reinicia em {format_duration(remaining)} ao retomar"
             )
         elif remaining is not None:
             next_number = self._reminder_number + 1
@@ -765,7 +784,8 @@ class WaterReminderApplication(Gtk.Application):
         self._windows_notifications: WindowsNotificationService | None = None
         if sys.platform == "win32":
             self._windows_notifications = WindowsNotificationService(
-                self._queue_windows_confirmation
+                self._queue_windows_confirmation,
+                self._queue_windows_acceptance,
             )
         else:
             IconManager().install()
@@ -775,24 +795,41 @@ class WaterReminderApplication(Gtk.Application):
         action = Gio.SimpleAction.new("confirm-reminder", GLib.VariantType.new("s"))
         action.connect("activate", self._on_confirm_action)
         self.add_action(action)
+        accept_action = Gio.SimpleAction.new("accept-reminder", GLib.VariantType.new("s"))
+        accept_action.connect("activate", self._on_accept_action)
+        self.add_action(accept_action)
 
     def do_activate(self) -> None:
         window = self.get_active_window()
         if window is None:
             window = ReminderWindow(self)
+            self.clear_reminder_notifications()
         window.present()
 
     def _on_confirm_action(self, _action: Gio.SimpleAction, target: GLib.Variant) -> None:
         self._show_confirmation(target.get_string())
 
+    def _on_accept_action(self, _action: Gio.SimpleAction, target: GLib.Variant) -> None:
+        self._accept_reminder(target.get_string())
+
     def _queue_windows_confirmation(self, record_id: str) -> None:
         GLib.idle_add(self._show_confirmation, record_id)
+
+    def _queue_windows_acceptance(self, record_id: str) -> None:
+        GLib.idle_add(self._accept_reminder, record_id)
 
     def _show_confirmation(self, record_id: str) -> bool:
         window = self.get_active_window()
         if window is None:
             window = ReminderWindow(self)
         window.show_confirmation(record_id)
+        return False
+
+    def _accept_reminder(self, record_id: str) -> bool:
+        window = self.get_active_window()
+        if window is None:
+            window = ReminderWindow(self)
+        window.answer_reminder(record_id, True)
         return False
 
     def send_reminder_notification(self, record: ReminderRecord) -> None:
@@ -805,13 +842,22 @@ class WaterReminderApplication(Gtk.Application):
             return
         notification = Gio.Notification.new(NOTIFICATION_TITLE)
         notification.set_icon(Gio.ThemedIcon.new(APPLICATION_ID))
+        notification.set_priority(Gio.NotificationPriority.URGENT)
         notification.set_body(
             f"{reminder_message(record.sips)} ({record.milliliters} mL). Clique para confirmar."
         )
         target = GLib.Variant("s", record.id)
         notification.set_default_action_and_target("app.confirm-reminder", target)
-        notification.add_button_with_target("Confirmar agora", "app.confirm-reminder", target)
+        notification.add_button_with_target("Confirmar agora", "app.accept-reminder", target)
         self.send_notification(record.id, notification)
+
+    def clear_reminder_notifications(self) -> None:
+        """Recolhe somente as notificações pertencentes a este aplicativo."""
+        if self._windows_notifications is not None:
+            self._windows_notifications.clear()
+            return
+        for record in HistoryStore().load():
+            self.withdraw_notification(record.id)
 
 
 def main() -> int:
