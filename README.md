@@ -1,5 +1,5 @@
 <div align="center">
-  <img src="./docs/assets/lembrete-agua-hero.svg" width="100%" alt="Blue illustration of Water Reminder with a drop, waves, and hydration dashboard" />
+  <img src="./docs/assets/lembrete-agua-crest.png" width="240" alt="Water Reminder crest with a luminous drop, timer ring, and waves" />
   <h1>💧 Water Reminder</h1>
   <p><strong>Take a pause. Drink some water. Keep going.</strong></p>
   <p>A gentle desktop companion that turns hydration into a simple, private, and consistent habit.</p>
